@@ -5,6 +5,7 @@ const app = express()
 const port = process.env.PORT || 8080;
 const { nanoid } = require('nanoid')
 const sql = require("./connection")
+const Moment = require('moment-timezone')
 
 
 app.use(cors({ origin: true, credentials: true }));
@@ -28,7 +29,7 @@ app.post("/api/addNewExpense", (req, res) => {
     const uuid = nanoid()
     const id = req.body.id
     const category = req.body.category
-    const createdOn = new Date().toISOString().slice(0,10);
+    const createdOn = Moment().tz('Asia/Singapore').format('YYYY-MM-DD')
     const expense = req.body.expense
     sql.query(`insert into Expenses values ('${uuid}', ${id}, '${category}', '${createdOn}', ${expense})`, 
     (error, result) => {
@@ -37,8 +38,12 @@ app.post("/api/addNewExpense", (req, res) => {
     })
 })
 
-app.get("/api/getCurrentMonthExpense", (req, res) => {
-    sql.query(`select * from Expenses`, 
+app.get("/api/getCurrentMonthExpense/:id", (req, res) => {
+    const id = req.params.id
+    const currentTime = Moment().tz('Asia/Singapore')
+    const month = String(currentTime.month() + 1).padStart(2, '0')
+    const year = currentTime.year()
+    sql.query(`SELECT SUM(Expense) AS 'Total', Category FROM Expenses where ID = ${id} AND CreatedON like '${year}%-${month}%' GROUP BY Category`, 
     (error, result) => {
         if(error) throw error;
         res.send(result)
@@ -48,3 +53,4 @@ app.get("/api/getCurrentMonthExpense", (req, res) => {
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`)
 })
+

@@ -12,6 +12,7 @@
   "dependencies": {
     "axios": "^0.21.1",
     "dotenv": "^10.0.0",
+    "node-cron": "^3.0.0",
     "nodemon": "^2.0.12",
     "telegraf": "^3.38.0"
   }

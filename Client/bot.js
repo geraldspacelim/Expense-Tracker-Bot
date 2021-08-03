@@ -6,6 +6,7 @@ const Stage = require("telegraf/stage");
 const session = require("telegraf/session");
 const WizardScene = require("telegraf/scenes/wizard");
 const axios = require('axios');
+const cron = require('node-cron')
 
 const introScene = new WizardScene(
     "introScene", 
@@ -106,17 +107,30 @@ const expenseScene = new WizardScene(
         return ctx.wizard.next();
     }
 )
-
-bot.command('report', ctx  => {
-    axios.get(`http://localhost:8080/api/getCurrentMonthExpense`).then(function (response) {
-        console.log(response)
+function getReport(ctx) {
+    axios.get(`http://localhost:8080/api/getCurrentMonthExpense/${ctx.from.id}`).then(function (res) {
+        var string = ""
+        var total = 0
+        for(let i = 0; i<res.data.length; i++){
+            string += res.data[i]['Category'] + ": " + "$" + res.data[i]['Total'].toFixed(2) + "\n"
+            total += parseFloat(res.data[i]['Total'])
+        }
+        ctx.reply(string + "\nTotal: $" + total.toFixed(2))
     }).catch (function (error){
         console.log(error)
     }) 
-    // Coffee: $1
-    // Work Food: $2
-    // Total: $3
+}
+bot.command('report', ctx  => {
+    getReport(ctx)
 })
+
+
+cron.schedule('* * * * *', () => {
+     bot.use(ctx =>{
+         console.log(ctx)
+     })
+  });
+  
 
 const stage = new Stage([introScene, expenseScene], {default: 'introScene '})
 bot.use(session())
@@ -127,3 +141,7 @@ bot.command('expense', ctx => ctx.scene.enter("expenseScene"))
 
 bot.launch()
 
+// Problems: 
+// Can't stack rows
+// Trouble softcoding
+// CreatedOn is not in SG time
