@@ -90,9 +90,8 @@ const expenseScene = new WizardScene(
         return ctx.wizard.next();
     },
     ctx => {
-        // get previous value use ctx.update.message.text
         const category = ctx.update.message.text
-        ctx.wizard.state.data.salary =  category
+        ctx.wizard.state.data.category =  category
         ctx.reply("Enter a value: ")
         return ctx.wizard.next();
     }, ctx => {
@@ -109,11 +108,14 @@ const expenseScene = new WizardScene(
 )
 
 bot.command('report', ctx  => {
-    axios.get(`/api/getCurrentMonthExpense?id=${ctx.from.id}`).then(function (response) {
+    axios.get(`http://localhost:8080/api/getCurrentMonthExpense`).then(function (response) {
         console.log(response)
     }).catch (function (error){
         console.log(error)
     }) 
+    // Coffee: $1
+    // Work Food: $2
+    // Total: $3
 })
 
 const stage = new Stage([introScene, expenseScene], {default: 'introScene '})

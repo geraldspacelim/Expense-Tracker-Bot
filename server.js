@@ -6,6 +6,7 @@ const port = process.env.PORT || 8080;
 const { nanoid } = require('nanoid')
 const sql = require("./connection")
 
+
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -27,18 +28,22 @@ app.post("/api/addNewExpense", (req, res) => {
     const uuid = nanoid()
     const id = req.body.id
     const category = req.body.category
-    const createdOn = new Date()
+    const createdOn = new Date().toISOString().slice(0,10);
     const expense = req.body.expense
-    sql.query(`insert into Expenses values ('${uuid}', ${id}, '${category}', ${createdOn}, ${expense})`, 
+    sql.query(`insert into Expenses values ('${uuid}', ${id}, '${category}', '${createdOn}', ${expense})`, 
     (error, result) => {
         if(error) throw error;
         res.send('new expense record added successfully!')
     })
 })
 
-// app.get("/api/getCurrentMonthExpense", (req, res) => {
-
-// })
+app.get("/api/getCurrentMonthExpense", (req, res) => {
+    sql.query(`select * from Expenses`, 
+    (error, result) => {
+        if(error) throw error;
+        res.send(result)
+    })
+})
 
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`)
