@@ -50,24 +50,36 @@ const introScene = new WizardScene(
 const expenseScene = new WizardScene(
     "expenseScene", 
     ctx => {
+        ctx.wizard.state.data = {};
+        ctx.wizard.state.data.id = ctx.from.id
         ctx.reply("What would you like to track?", {
             reply_markup: {
                 keyboard: [
                     [
                         {text: "Work Food", callback_data: 'work-food-category'},
-                        {text: "Good Food", callback_data: 'good-food-category'},
                     ], 
                     [
+                        {text: "Good Food", callback_data: 'good-food-category'},
+                    ],
+                    [
                         {text: "Coffee", callback_data: 'coffee-category'},
+                    ],
+                    [
                         {text: "Alcohol", callback_data: 'alcohol-category'},
                     ],
                     [
                         {text: "Necessities", callback_data: 'necessities-category'},
+                    ],
+                    [
                         {text: "Shopping & Leisure", callback_data: 'shopping-category'},
                     ],
                     [
                         {text: "Ciggs", callback_data: 'ciggs-category'},
+                    ],
+                    [
                         {text: "Private Transport", callback_data: 'transport-category'},
+                    ],
+                    [
                         {text: "Groceries", callback_data: 'groceries-category'}
                     ]
                 ],
@@ -79,13 +91,30 @@ const expenseScene = new WizardScene(
     },
     ctx => {
         // get previous value use ctx.update.message.text
+        const category = ctx.update.message.text
+        ctx.wizard.state.data.salary =  category
         ctx.reply("Enter a value: ")
         return ctx.wizard.next();
     }, ctx => {
-        // const value =  parseFloat(ctx.message.text).toFixed(2)
+        const expense = parseFloat(ctx.message.text).toFixed(2)
+        ctx.wizard.state.data.expense =  expense
+        axios.post('http://localhost:8080/api/addNewExpense', ctx.wizard.state.data).then(function (res){
+            console.log(res.data)
+        }).catch(function (error) {
+            console.log(error)
+        })
+        ctx.reply("Your expense has been recorded")
+        return ctx.wizard.next();
     }
 )
 
+bot.command('report', ctx  => {
+    axios.get(`/api/getCurrentMonthExpense?id=${ctx.from.id}`).then(function (response) {
+        console.log(response)
+    }).catch (function (error){
+        console.log(error)
+    }) 
+})
 
 const stage = new Stage([introScene, expenseScene], {default: 'introScene '})
 bot.use(session())
