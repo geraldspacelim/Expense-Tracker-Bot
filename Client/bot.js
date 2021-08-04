@@ -7,12 +7,17 @@ const session = require("telegraf/session");
 const WizardScene = require("telegraf/scenes/wizard");
 const axios = require('axios');
 const cron = require('node-cron')
+// const LocalSession = require('telegraf-session-local')
+
+let userTeleId = undefined
 
 const introScene = new WizardScene(
     "introScene", 
     ctx => {
         ctx.wizard.state.data = {};
-        ctx.wizard.state.data.id = ctx.from.id
+        const telegramId = ctx.from.id
+        ctx.wizard.state.data.id = telegramId
+        userTeleId = telegramId
         ctx.replyWithPhoto({
             source: "./assets/image.png"
         },
@@ -107,29 +112,38 @@ const expenseScene = new WizardScene(
         return ctx.wizard.next();
     }
 )
-function getReport(ctx) {
-    axios.get(`http://localhost:8080/api/getCurrentMonthExpense/${ctx.from.id}`).then(function (res) {
-        var string = ""
-        var total = 0
-        for(let i = 0; i<res.data.length; i++){
-            string += res.data[i]['Category'] + ": " + "$" + res.data[i]['Total'].toFixed(2) + "\n"
-            total += parseFloat(res.data[i]['Total'])
+async function getMontlyExpenseReport(telegramId) {
+
+    try {
+        const res = await axios.get(`http://localhost:8080/api/getCurrentMonthExpense/${telegramId}`);
+        if (res.data != []) {
+            var report = ""
+            var total = 0
+            for(let i = 0; i<res.data.length; i++){
+                report += res.data[i]['Category'] + ": " + "$" + res.data[i]['Total'].toFixed(2) + "\n"
+                total += parseFloat(res.data[i]['Total'])
+            }
+            return report + "\nTotal: $" + total.toFixed(2)
         }
-        ctx.reply(string + "\nTotal: $" + total.toFixed(2))
-    }).catch (function (error){
-        console.log(error)
-    }) 
+      } catch (error) {
+        console.error(error);
+      }
 }
-bot.command('report', ctx  => {
-    getReport(ctx)
+bot.command('report', async ctx  => {
+    await getMontlyExpenseReport(ctx.from.id).then(res => {
+        ctx.reply(res)
+    }).catch(err => {
+        console.log(err)
+    })
 })
 
-
-cron.schedule('* * * * *', () => {
-     bot.use(ctx =>{
-         console.log(ctx)
-     })
-  });
+cron.schedule('0 0 1 * *', async () => {
+    await getMontlyExpenseReport(userTeleId).then(res => {
+        bot.telegram.sendMessage(userTeleId, res)
+    }).catch(err => {
+        console.log(err)
+    })
+});
   
 
 const stage = new Stage([introScene, expenseScene], {default: 'introScene '})
@@ -140,8 +154,3 @@ bot.command('expense', ctx => ctx.scene.enter("expenseScene"))
 
 
 bot.launch()
-
-// Problems: 
-// Can't stack rows
-// Trouble softcoding
-// CreatedOn is not in SG time
