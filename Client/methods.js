@@ -1,7 +1,8 @@
 const axios = require('axios');
 const Moment = require('moment-timezone')
+
 let userTeleId = undefined
-const category = ["Work Food", "Good Food", "Coffee", "Alcohol", "Necessities", "Shopping & Leisure", "Ciggs", "Private Transport", "Groceries" ]
+const category = ["Work Food", "Good Food", "Coffee", "Alcohol", "Necessities", "Shopping & Leisure", "Ciggs", "Private Transport", "Groceries", "Others" ]
 async function getMontlyExpenseReport(telegramId) {
     try {
         const res = await axios.get(`http://localhost:8080/api/getCurrentMonthExpense/${telegramId}`);
@@ -29,10 +30,6 @@ async function getMontlyExpenseReport(telegramId) {
               11 : "November",
               12 : "December"
             }
-            console.log(dict[2])
-            console.log(parseInt(month))
-            console.log(dict[parseInt(8)])
-            console.log(dict[parseInt(month)])
             return "This is your monthly expenses for " + dict[parseInt(month)] + ".\n" + report + "\nTotal: $" + total.toFixed(2)
         }
       } catch (error) {
@@ -40,6 +37,12 @@ async function getMontlyExpenseReport(telegramId) {
       }
 }
 
+function capitalize(s)
+{
+    return s[0].toUpperCase() + s.slice(1);
+}
+
 exports.userTeleId = userTeleId
 exports.category = category
 exports.getMontlyExpenseReport = getMontlyExpenseReport
+exports.capitalize = capitalize

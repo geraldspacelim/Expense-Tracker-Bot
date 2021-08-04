@@ -11,30 +11,23 @@ const step1 = ctx => {
             keyboard: [
                 [
                     {text: "Work Food", callback_data: 'work-food-category'},
+                    {text: "Good Food", callback_data: 'good-food-category'}
                 ], 
                 [
-                    {text: "Good Food", callback_data: 'good-food-category'},
-                ],
-                [
                     {text: "Coffee", callback_data: 'coffee-category'},
-                ],
-                [
                     {text: "Alcohol", callback_data: 'alcohol-category'},
                 ],
                 [
                     {text: "Necessities", callback_data: 'necessities-category'},
-                ],
-                [
                     {text: "Shopping & Leisure", callback_data: 'shopping-category'},
                 ],
                 [
                     {text: "Ciggs", callback_data: 'ciggs-category'},
-                ],
-                [
                     {text: "Private Transport", callback_data: 'transport-category'},
                 ],
                 [
-                    {text: "Groceries", callback_data: 'groceries-category'}
+                    {text: "Groceries", callback_data: 'groceries-category'},
+                    {text: "Others", callback_data: "others"}
                 ]
             ],
             one_time_keyboard: true,
@@ -47,14 +40,18 @@ const step1 = ctx => {
 const step2 = new Composer()
 
 step2.on("text", ctx => {
-    if (!methods.category.includes(ctx.update.message.text )) {
+    const category = ctx.update.message.text
+    if (!methods.category.includes(category)) {
         const currentStepIndex = ctx.wizard.cursor;
+        console.log(currentStepIndex)
         ctx.reply(
           "Please select from the categories"
         );
         return ctx.wizard.selectStep(currentStepIndex);
+    } else if (category === "Others") {
+        ctx.reply("Please enter a category:")
+        return ctx.wizard.selectStep(3)
     }
-    const category = ctx.update.message.text
     ctx.wizard.state.data.category =  category
     ctx.reply("Enter a value: ")
     return ctx.wizard.next();
@@ -77,14 +74,39 @@ step3.on("text", ctx => {
     }).catch(function (error) {
         console.log(error)
     })
-    ctx.reply("Your expense has been recorded")
-    return ctx.wizard.next();
+    ctx.reply("Please enter a description otherwise press /skip to record expense")
+    return ctx.scene.leave()
 })
+
+const step4 = new Composer()
+
+step4.on("text", ctx => {
+    if (!isNaN(ctx.message.text)) {
+        const currentStepIndex = ctx.wizard.cursor;
+        ctx.reply(
+          "Please enter a valid category"
+        );
+        return ctx.wizard.selectStep(currentStepIndex);
+    }
+    ctx.wizard.state.data.category = methods.capitalize(ctx.update.message.text)
+    ctx.reply("Enter a value: ")
+    return ctx.wizard.selectStep(2)
+}) 
+
+const step5 = new Composer()
+
+step5.on("text", ctx => {
+    // "Your expense has been recorded"
+    console.log(ctx.update.message.text)
+})
+
+
 
 const expenseScene = new WizardScene(
     "expenseScene", ctx => step1(ctx), 
                          step2,
                          step3,
+                         step4 
                         
 );
 
