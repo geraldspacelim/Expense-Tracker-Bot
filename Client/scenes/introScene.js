@@ -54,15 +54,15 @@ step4.on("text", ctx => {
     ctx.wizard.state.data.salary =  salary
     axios.post('http://localhost:8080/api/addNewUser', ctx.wizard.state.data).then(function (res){
         console.log(res.data)
+        const savings = 0.4*salary
+        const expense = 0.3*salary
+        const retire = 0.2*salary
+        const insurance = 0.1*salary 
+        ctx.reply("Cash Savings & Loans: $" + savings + "\nExpenses: $" + expense + "\nRetirement Planning: $" + retire + "\nInsurance: $" + insurance + "\n\nTo start tracking your expenses, press /expense")
+        return ctx.scene.leave()
     }).catch(function (error) {
         console.log(error)
-    })
-    const savings = 0.4*salary
-    const expense = 0.3*salary
-    const retire = 0.2*salary
-    const insurance = 0.1*salary 
-    ctx.reply("Cash Savings & Loans: $" + savings + "\nExpenses: $" + expense + "\nRetirement Planning: $" + retire + "\nInsurance: $" + insurance + "\n\nTo start tracking your expenses, press /expense")
-    return ctx.scene.leave()
+    }) 
 })
 
 const introScene = new WizardScene(

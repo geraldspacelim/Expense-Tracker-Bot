@@ -31,11 +31,23 @@ app.post("/api/addNewExpense", (req, res) => {
     const category = req.body.category
     const createdOn = Moment().tz('Asia/Singapore').format('YYYY-MM-DD')
     const expense = req.body.expense
-    sql.query(`insert into Expenses values ('${uuid}', ${id}, '${category}', '${createdOn}', ${expense})`, 
+    const description = req.body.description
+    sql.query(`insert into Expenses values ('${uuid}', ${id}, '${category}', '${createdOn}', ${expense}, '${description}')`, 
     (error, result) => {
         if(error) throw error;
-        res.send('new expense record added successfully!')
+        res.status(200).send({uuid: uuid})
     })
+})
+
+app.post("/api/updateExpense", (req, res) => {
+    const category = req.body.category
+    const expense = req.body.expense 
+    const description = req.body.description 
+    sql.query(`update Expenses set Category = '${category}', Expense = ${expense}, Description = '${description}'`),
+    (error, result) => {
+        if (error) throw error;
+        res.status(200).send()
+    }
 })
 
 app.get("/api/getCurrentMonthExpense/:id", (req, res) => {

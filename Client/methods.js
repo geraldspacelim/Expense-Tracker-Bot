@@ -2,7 +2,9 @@ const axios = require('axios');
 const Moment = require('moment-timezone')
 
 let userTeleId = undefined
+
 const category = ["Work Food", "Good Food", "Coffee", "Alcohol", "Necessities", "Shopping & Leisure", "Ciggs", "Private Transport", "Groceries", "Others" ]
+
 async function getMontlyExpenseReport(telegramId) {
     try {
         const res = await axios.get(`http://localhost:8080/api/getCurrentMonthExpense/${telegramId}`);
@@ -31,6 +33,7 @@ async function getMontlyExpenseReport(telegramId) {
               12 : "December"
             }
             return "This is your monthly expenses for " + dict[parseInt(month)] + ".\n" + report + "\nTotal: $" + total.toFixed(2)
+            // return "https://quickchart.io/chart?bkg=white&c={type:%27bar%27,data:{labels:[2012,2013,2014,2015,2016],datasets:[{label:%27Users%27,data:[120,60,50,180,120]}]}}"
         }
       } catch (error) {
         console.error(error);

@@ -4,6 +4,7 @@ const axios = require('axios');
 const methods = require("../methods.js")
 
 const step1 = ctx => {
+    console.log(ctx.wizard.state.edit)
     ctx.wizard.state.data = {};
     ctx.wizard.state.data.id = ctx.from.id
     ctx.reply("What would you like to track?", {
@@ -69,13 +70,8 @@ step3.on("text", ctx => {
     }
     const expense = parseFloat(ctx.message.text).toFixed(2)
     ctx.wizard.state.data.expense =  expense
-    axios.post('http://localhost:8080/api/addNewExpense', ctx.wizard.state.data).then(function (res){
-        console.log(res.data)
-    }).catch(function (error) {
-        console.log(error)
-    })
     ctx.reply("Please enter a description otherwise press /skip to record expense")
-    return ctx.scene.leave()
+    return ctx.wizard.selectStep(4)
 })
 
 const step4 = new Composer()
@@ -96,8 +92,35 @@ step4.on("text", ctx => {
 const step5 = new Composer()
 
 step5.on("text", ctx => {
-    // "Your expense has been recorded"
-    console.log(ctx.update.message.text)
+    if (ctx.message.text === "/skip") {
+        ctx.wizard.state.data.description = ""
+    } else {
+        ctx.wizard.state.data.description = ctx.message.text
+    }
+
+    if (ctx.wizard.state.data.edit) {
+        axios.post('http://localhost:8080/api/updateExpense', ctx.wizard.state.data).then(function (res) {
+            if(res.status== 200) {
+                ctx.editMessageText
+            }
+        })
+    }
+    axios.post('http://localhost:8080/api/addNewExpense', ctx.wizard.state.data).then(function (res){
+        if (res.status == 200) {
+            ctx.reply("Your expense has been recorded", {
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            {text: 'Edit', callback_data:  `${ctx.message.message_id}.${res.data.uuid}`}
+                        ]
+                    ]
+                }
+            })
+        }
+        return ctx.scene.leave()
+    }).catch(function (error) {
+        console.log(error)
+    }) 
 })
 
 
@@ -106,7 +129,8 @@ const expenseScene = new WizardScene(
     "expenseScene", ctx => step1(ctx), 
                          step2,
                          step3,
-                         step4 
+                         step4,
+                         step5, 
                         
 );
 
