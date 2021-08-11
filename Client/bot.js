@@ -23,7 +23,9 @@ bot.use(session())
 bot.use(stage.middleware())
 bot.start(ctx => ctx.scene.enter("introScene"))
 bot.command('expense', ctx => ctx.scene.enter("expenseScene", {edit: false}))
-bot.on("callback_query", ctx => ctx.scene.enter("expenseScene", {edit: true, callback_data: ctx.update.callback_query.data}))
+// bot.on("callback_query", ctx => ctx.scene.enter("expenseScene", {edit: true, callback_data: ctx.update.callback_query.data}))
+bot.on("callback_query", ctx => console.log(ctx.update.callback_query.message))
+
 bot.command('report', async ctx  => {
     await methods.getMontlyExpenseReport(ctx.from.id).then(res => {
         ctx.reply(res)
@@ -31,4 +33,18 @@ bot.command('report', async ctx  => {
         console.log(err)
     })
 })
+
+bot.command("test", ctx => bot.telegram.editMessageText(260677589,1733,1119601719990879717,"heeloollo", {
+    reply_markup: {
+        inline_keyboard: [
+            [
+                {text: "test", callback_data:"test"}
+            ]
+        ]
+    }
+}))
+// bot.use(ctx => {
+//     console.log(ctx)
+// })]
+
 bot.launch()

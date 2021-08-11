@@ -4,9 +4,11 @@ const axios = require('axios');
 const methods = require("../methods.js")
 
 const step1 = ctx => {
-    console.log(ctx.wizard.state.edit)
     ctx.wizard.state.data = {};
     ctx.wizard.state.data.id = ctx.from.id
+    if (ctx.wizard.state.edit) {
+        console.log(ctx.wizard.state.callback_data)
+    } 
     ctx.reply("What would you like to track?", {
         reply_markup: {
             keyboard: [
@@ -44,7 +46,6 @@ step2.on("text", ctx => {
     const category = ctx.update.message.text
     if (!methods.category.includes(category)) {
         const currentStepIndex = ctx.wizard.cursor;
-        console.log(currentStepIndex)
         ctx.reply(
           "Please select from the categories"
         );
@@ -97,21 +98,28 @@ step5.on("text", ctx => {
     } else {
         ctx.wizard.state.data.description = ctx.message.text
     }
-
-    if (ctx.wizard.state.data.edit) {
-        axios.post('http://localhost:8080/api/updateExpense', ctx.wizard.state.data).then(function (res) {
-            if(res.status== 200) {
-                ctx.editMessageText
-            }
-        })
-    }
-    axios.post('http://localhost:8080/api/addNewExpense', ctx.wizard.state.data).then(function (res){
+    if (ctx.wizard.state.edit) {
+        const message_id = ctx.wizard.state.callback_data.split(".")[0]
+        console.log(message_id)
+        // axios.post('http://localhost:8080/api/updateExpense', ctx.wizard.state.data).then(function (res) {
+        //     if(res.status== 200) {
+        //         ctx.editMessageText(message_id, "test", {
+        //             reply_markup: {
+        //                 inline_keyboard: [
+        //                     {text: "test", callback_data: "rewrwer"}
+        //                 ]
+        //             }
+        //         })
+        //     }
+        // })
+    } else {
+        axios.post('http://localhost:8080/api/addNewExpense', ctx.wizard.state.data).then(function (res){
         if (res.status == 200) {
-            ctx.reply("Your expense has been recorded", {
+            ctx.reply("Your expense has been recorded\n", {
                 reply_markup: {
                     inline_keyboard: [
                         [
-                            {text: 'Edit', callback_data:  `${ctx.message.message_id}.${res.data.uuid}`}
+                            {text: 'Edit', callback_data:  `${ctx.message.message_id + 1}.${res.data.uuid}`}
                         ]
                     ]
                 }
@@ -121,6 +129,8 @@ step5.on("text", ctx => {
     }).catch(function (error) {
         console.log(error)
     }) 
+    }
+    
 })
 
 
