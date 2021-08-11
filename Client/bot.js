@@ -29,7 +29,7 @@ bot.command('expense', ctx => ctx.scene.enter("expenseScene", {edit: false}))
 bot.on("callback_query", ctx => ctx.scene.enter("expenseScene", {edit: true, callback_data: ctx}))
 
 bot.command('report', async ctx  => {
-    await methods.getMontlyExpenseReport(ctx.from.id, methods.monthlyExpense).then(res => {
+    await methods.getMontlyExpenseReport(ctx.from.id, methods.budgetAllocation.expense).then(res => {
         var caption = `This is your monthly expenses for ${res.month}.`
         if (res.isOverSpent) {
             caption += "\n\n🚨You have spent 80% of your budget this month! Please practice mindfulness in your expenses!"
@@ -41,20 +41,5 @@ bot.command('report', async ctx  => {
         console.log(err)
     })
 })
-
-// bot.command("c", ctx => {
-//     const myChart = new QuickChart();
-// myChart
-//   .setConfig({
-//     type: 'bar',
-//     data: { labels: ['Hello world', 'Foo bar'], datasets: [{ label: 'Foo', data: [1, 2] }] },
-//   })
-//   .setWidth(800)
-//   .setHeight(400)
-//   .setBackgroundColor('transparent');
-
-// // Print the chart URL
-// ctx.replyWithPhoto(myChart.getUrl());
-// })
 
 bot.launch()

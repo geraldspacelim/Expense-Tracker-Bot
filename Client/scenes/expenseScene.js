@@ -6,10 +6,6 @@ const methods = require("../methods.js")
 const step1 = ctx => {
     ctx.wizard.state.data = {};
     ctx.wizard.state.data.id = ctx.from.id
-    // console.log(ctx.wizard.state.callback_data)
-    // if (ctx.wizard.state.edit) {
-    //     console.log(ctx.wizard.state.callback_data)
-    // } 
     ctx.reply("What would you like to track?", {
         reply_markup: {
             keyboard: [

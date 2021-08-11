@@ -3,12 +3,14 @@ const Moment = require('moment-timezone')
 const QuickChart = require('quickchart-js');
 
 let userTeleId = undefined
-let monthlyExpense = -1
+let salaryBreakdown = {}
 const dobRegex = new RegExp(/^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/)
 
 
 const category = ["Work Food", "Good Food", "Coffee", "Alcohol", "Necessities", "Shopping & Leisure", "Ciggs", "Private Transport", "Groceries", "Others" ]
 const occupation = ["Polytechnic", "University", "Fresh Graduate", "Employed", "Unemployed"]
+const budgetAllocation = ["Cash Savings & Loans", "Expenses", "Retirement Planning", "Insurance"]
+const answers = ["Yes", "No"]
 
 var calendar = {
               1 : "January",
@@ -92,5 +94,8 @@ async function getMontlyExpenseReport(telegramId, monthlyExpense) {
 
 exports.userTeleId = userTeleId
 exports.category = category
+exports.occupation = occupation
+exports.budgetAllocation = budgetAllocation
 exports.getMontlyExpenseReport = getMontlyExpenseReport
-exports.monthlyExpense = monthlyExpense
+exports.salaryBreakdown = salaryBreakdown
+exports.answers = answers
