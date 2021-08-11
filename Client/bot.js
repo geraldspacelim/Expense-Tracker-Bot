@@ -10,8 +10,11 @@ const methods = require("./methods.js");
 
 cron.schedule('0 0 1 * *', async () => {
     const userTeleId = methods.userTeleId
-    await methods.getMontlyExpenseReport(userTeleId).then(res => {
-        bot.telegram.sendMessage(userTeleId, res)
+    await methods.getMontlyExpenseReport(userTeleId, methods.monthlyExpense).then(res => {
+        var caption = `This is your monthly expenses for ${res.month}.`
+        ctx.replyWithPhoto(res.url, {
+            caption: caption
+        })
     }).catch(err => {
         console.log(err)
     })
@@ -23,28 +26,35 @@ bot.use(session())
 bot.use(stage.middleware())
 bot.start(ctx => ctx.scene.enter("introScene"))
 bot.command('expense', ctx => ctx.scene.enter("expenseScene", {edit: false}))
-// bot.on("callback_query", ctx => ctx.scene.enter("expenseScene", {edit: true, callback_data: ctx.update.callback_query.data}))
-bot.on("callback_query", ctx => console.log(ctx.update.callback_query.message))
+bot.on("callback_query", ctx => ctx.scene.enter("expenseScene", {edit: true, callback_data: ctx}))
 
 bot.command('report', async ctx  => {
-    await methods.getMontlyExpenseReport(ctx.from.id).then(res => {
-        ctx.reply(res)
+    await methods.getMontlyExpenseReport(ctx.from.id, methods.monthlyExpense).then(res => {
+        var caption = `This is your monthly expenses for ${res.month}.`
+        if (res.isOverSpent) {
+            caption += "\n\n🚨You have spent 80% of your budget this month! Please practice mindfulness in your expenses!"
+        }
+        ctx.replyWithPhoto(res.url, {
+            caption: caption
+        })
     }).catch(err => {
         console.log(err)
     })
 })
 
-bot.command("test", ctx => bot.telegram.editMessageText(260677589,1733,1119601719990879717,"heeloollo", {
-    reply_markup: {
-        inline_keyboard: [
-            [
-                {text: "test", callback_data:"test"}
-            ]
-        ]
-    }
-}))
-// bot.use(ctx => {
-//     console.log(ctx)
-// })]
+// bot.command("c", ctx => {
+//     const myChart = new QuickChart();
+// myChart
+//   .setConfig({
+//     type: 'bar',
+//     data: { labels: ['Hello world', 'Foo bar'], datasets: [{ label: 'Foo', data: [1, 2] }] },
+//   })
+//   .setWidth(800)
+//   .setHeight(400)
+//   .setBackgroundColor('transparent');
+
+// // Print the chart URL
+// ctx.replyWithPhoto(myChart.getUrl());
+// })
 
 bot.launch()

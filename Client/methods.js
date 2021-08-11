@@ -1,24 +1,16 @@
 const axios = require('axios');
 const Moment = require('moment-timezone')
+const QuickChart = require('quickchart-js');
 
 let userTeleId = undefined
+let monthlyExpense = -1
+const dobRegex = new RegExp(/^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/)
+
 
 const category = ["Work Food", "Good Food", "Coffee", "Alcohol", "Necessities", "Shopping & Leisure", "Ciggs", "Private Transport", "Groceries", "Others" ]
+const occupation = ["Polytechnic", "University", "Fresh Graduate", "Employed", "Unemployed"]
 
-async function getMontlyExpenseReport(telegramId) {
-    try {
-        const res = await axios.get(`http://localhost:8080/api/getCurrentMonthExpense/${telegramId}`);
-        if (res.data != []) {
-            var report = ""
-            var total = 0
-            for(let i = 0; i<res.data.length; i++){
-                report += res.data[i]['Category'] + ": " + "$" + res.data[i]['Total'].toFixed(2) + "\n"
-                total += parseFloat(res.data[i]['Total'])
-            }
-            const currentTime = Moment().tz('Asia/Singapore')
-            const month = String(currentTime.month() + 1).padStart(2, '0')
-            var dict = new Object()
-            dict = {
+var calendar = {
               1 : "January",
               2 : "Feburary",
               3 : "March",
@@ -32,20 +24,73 @@ async function getMontlyExpenseReport(telegramId) {
               11 : "November",
               12 : "December"
             }
-            return "This is your monthly expenses for " + dict[parseInt(month)] + ".\n" + report + "\nTotal: $" + total.toFixed(2)
-            // return "https://quickchart.io/chart?bkg=white&c={type:%27bar%27,data:{labels:[2012,2013,2014,2015,2016],datasets:[{label:%27Users%27,data:[120,60,50,180,120]}]}}"
+
+async function getMontlyExpenseReport(telegramId, monthlyExpense) {
+    try {
+        const res = await axios.get(`http://localhost:8080/api/getCurrentMonthExpense/${telegramId}`);
+        if (res.data != []) {
+            var total = 0
+            var labels = []
+            var data = []
+            for (const category of res.data){
+              labels.push(category.Category)
+              const expenseValue = parseFloat(category.Total)
+              data.push(expenseValue)
+              total += expenseValue
+            }
+            const currentTime = Moment().tz('Asia/Singapore')
+            const month = String(currentTime.month() + 1).padStart(2, '0')
+            const myChart = new QuickChart();
+            myChart
+              .setConfig(
+                {
+                  type: 'doughnut',
+                  data: {
+                    labels: labels,
+                    datasets: [{
+                      data: data
+                    }]
+                  },
+                  options: {
+                    plugins: {
+                      datalabels: {
+                        display: true,
+                        backgroundColor: '#ccc',
+                        borderRadius: 3,
+                        font: {
+                          weight: 'bold',
+                        }
+                      },
+                      doughnutlabel: {
+                        labels: [{
+                          text: `$${total.toFixed(2)}`,
+                          font: {
+                            size: 20,
+                            weight: 'bold'
+                          }
+                        }, {
+                          text: 'total'
+                        }]
+                      }
+                    }
+                  }
+                }
+              )
+              .setBackgroundColor('transparent');
+              console.log(monthlyExpense)
+            return ({
+              url: myChart.getUrl(),
+              month:  calendar[parseInt(month)],
+              isOverSpent: total/monthlyExpense >= 0.8 
+            })
         }
       } catch (error) {
         console.error(error);
       }
 }
 
-function capitalize(s)
-{
-    return s[0].toUpperCase() + s.slice(1);
-}
 
 exports.userTeleId = userTeleId
 exports.category = category
 exports.getMontlyExpenseReport = getMontlyExpenseReport
-exports.capitalize = capitalize
+exports.monthlyExpense = monthlyExpense
