@@ -101,7 +101,6 @@ step5.on("text", ctx => {
         const callback_data = ctx.wizard.state.callback_data
         const uuid = callback_data.update.callback_query.data
         ctx.wizard.state.data.uuid = uuid
-        console.log(ctx.wizard.state.data)
         axios.post('http://localhost:8080/api/updateExpense', ctx.wizard.state.data).then(function (res) {
             if(res.status == 200) {
                 expenseText += `Category: ${expense.category}\nExpense: ${expense.expense}`

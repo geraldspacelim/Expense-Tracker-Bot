@@ -7,6 +7,14 @@ const cron = require('node-cron')
 const introScene = require("./scenes/introScene").introScene
 const expenseScene = require("./scenes/expenseScene").expenseScene
 const methods = require("./methods.js"); 
+const LocalSession = require("telegraf-session-local");
+
+const property = "data";
+const localSession = new LocalSession({
+  storage: LocalSession.storageMemory
+});
+
+bot.use(localSession.middleware(property));
 
 cron.schedule('0 0 1 * *', async () => {
     const userTeleId = methods.userTeleId
@@ -29,7 +37,7 @@ bot.command('expense', ctx => ctx.scene.enter("expenseScene", {edit: false}))
 bot.on("callback_query", ctx => ctx.scene.enter("expenseScene", {edit: true, callback_data: ctx}))
 
 bot.command('report', async ctx  => {
-    await methods.getMontlyExpenseReport(ctx.from.id, methods.budgetAllocation.expense).then(res => {
+    await methods.getMontlyExpenseReport(ctx["data"].telegramId, ctx["data"].salaryBreakdown.expense).then(res => {
         var caption = `This is your monthly expenses for ${res.month}.`
         if (res.isOverSpent) {
             caption += "\n\n🚨You have spent 80% of your budget this month! Please practice mindfulness in your expenses!"

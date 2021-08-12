@@ -8,7 +8,7 @@ const step1 = ctx => {
     ctx.wizard.state.data = {};
     const telegramId = ctx.from.id
     ctx.wizard.state.data.id = telegramId
-    methods.userTeleId = telegramId
+    ctx["data"].telegramId = telegramId;
     ctx.reply ("Hello! Congrats for taking the first step to get AAHEADSTART in Adulting!🎉 I’m your friendly expense tracking bot. Before we get started, I’d like to get to know you a little better. What is your name?\n\n<i>By using this service, you agree to the terms and conditions governing your use of @AAheadstart_bot online service.</i>", {
         parse_mode: "HTML"
     })
@@ -93,12 +93,18 @@ step5.on("text", ctx => {
         const expense = 0.3*salary
         const retire = 0.2*salary
         const insurance = 0.1*salary 
-        methods.salaryBreakdown = {
+        ctx["data"].salaryBreakdown = {
             savings: savings,
             expense: expense,
             retire: retire,
             insurance: insurance
-        }
+        };
+        // methods.salaryBreakdown = {
+        //     savings: savings,
+        //     expense: expense,
+        //     retire: retire,
+        //     insurance: insurance
+        // }
         ctx.replyWithPhoto({
             source: "./assets/image.jpg"
         },
@@ -157,14 +163,8 @@ step6.on("text", ctx => {
         return ctx.wizard.next();
     }
     else {
-        const endConvo = `Your goal is to keep your monthly expenses below ${methods.salaryBreakdown.expense}. I will be there with you every step of the way! Good luck! 👍🏻`
-
-        
-        if (ctx.wizard.state.data.isAmend) {
-            const updatedBudgetAllocation = `This is your updated customized allocation:\nCash Savings & Loans: ${methods.salaryBreakdown.savings} \n\nExpenses: ${methods.salaryBreakdown.expense}\n\nRetirement Planning: ${methods.salaryBreakdown.retire}\n\nInsurance: ${methods.salaryBreakdown.insurance}`
-            endConvo = updatedBudgetAllocation + "\n\n" + endConvo
-        }
-        ctx.reply(`Your goal is to keep your monthly expenses below ${methods.salaryBreakdown.expense}. I will be there with you every step of the way! Good luck! 👍🏻`)
+        const endConvo = `Your goal is to keep your monthly expenses below $${ctx["data"].salaryBreakdown.expense}. I will be there with you every step of the way! Good luck! 👍🏻`
+        ctx.reply(endConvo)
         return ctx.scene.leave()
     }
     
@@ -191,7 +191,6 @@ const step8 = new Composer()
 
 step8.on("text", ctx => {
     const budget = ctx.update.message.text
-    console.log(budget)
     if (isNaN(budget)) {
         const currentStepIndex = ctx.wizard.cursor;
         ctx.reply(
@@ -215,7 +214,8 @@ step8.on("text", ctx => {
             budgetAllocationMap = 'insurance'
             break;
     }
-    methods.salaryBreakdown[budgetAllocationMap] = parseFloat(budget)
+    // methods.salaryBreakdown[budgetAllocationMap] = parseFloat(budget)
+    ctx["data"].salaryBreakdown[budgetAllocationMap] = parseFloat(budget)
     ctx.reply("Would you like to amend the budget for any other categories above?", {
         reply_markup: {
             keyboard: [
@@ -243,12 +243,33 @@ step9.on("text", ctx => {
         return ctx.wizard.selectStep(currentStepIndex);
     } 
     if (amendCategory === "Yes") {
-        // console.log("here")
         ctx.wizard.state.data.isAmend =  true
-        // ctx.wizard.next()
-        return ctx.wizard.selectStep(5);
+        ctx.reply("Which category, would you like to amend?", {
+            reply_markup: {
+                keyboard: [
+                    [
+                        {text: "Cash Savings & Loans"}
+                    ],
+                    [
+                        {text: "Expenses"}
+                    ],
+                    [
+                        {text: "Retirement Planning"}
+                    ],
+                    [
+                        {text: "Insurance"}
+                    ],
+                ]
+            }
+        })
+        return ctx.wizard.selectStep(6);
     } else {
-        ctx.reply(`Your goal is to keep your monthly expenses below ${methods.salaryBreakdown.expense}.I will be there with you every step of the way! Good luck! 👍🏻`)
+        var endConvo = `Your goal is to keep your monthly expenses below $${ctx["data"].salaryBreakdown.expense}. I will be there with you every step of the way! Good luck! 👍🏻`
+         if (ctx.wizard.state.data.isAmend) {
+            const updatedBudgetAllocation = `This is your updated customized allocation:\nCash Savings & Loans: $${ctx["data"].salaryBreakdown.savings} \nExpenses: $${ctx["data"].salaryBreakdown.expense}\nRetirement Planning: $${ctx["data"].salaryBreakdown.retire}\nInsurance: $${ctx["data"].salaryBreakdown.insurance}`
+            endConvo = updatedBudgetAllocation + "\n\n" + endConvo
+        }
+        ctx.reply(endConvo)
         return ctx.scene.leave()
     }
 })

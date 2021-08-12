@@ -2,10 +2,8 @@ const axios = require('axios');
 const Moment = require('moment-timezone')
 const QuickChart = require('quickchart-js');
 
-let userTeleId = undefined
-let salaryBreakdown = {}
-const dobRegex = new RegExp(/^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/)
-
+// let userTeleId = undefined
+// let salaryBreakdown = {}
 
 const category = ["Work Food", "Good Food", "Coffee", "Alcohol", "Necessities", "Shopping & Leisure", "Ciggs", "Private Transport", "Groceries", "Others" ]
 const occupation = ["Polytechnic", "University", "Fresh Graduate", "Employed", "Unemployed"]
@@ -79,7 +77,6 @@ async function getMontlyExpenseReport(telegramId, monthlyExpense) {
                 }
               )
               .setBackgroundColor('transparent');
-              console.log(monthlyExpense)
             return ({
               url: myChart.getUrl(),
               month:  calendar[parseInt(month)],
@@ -92,10 +89,8 @@ async function getMontlyExpenseReport(telegramId, monthlyExpense) {
 }
 
 
-exports.userTeleId = userTeleId
 exports.category = category
 exports.occupation = occupation
 exports.budgetAllocation = budgetAllocation
 exports.getMontlyExpenseReport = getMontlyExpenseReport
-exports.salaryBreakdown = salaryBreakdown
 exports.answers = answers
