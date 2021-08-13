@@ -8,6 +8,7 @@ const step1 = ctx => {
     const telegramId = ctx.from.id
     ctx.wizard.state.data.id = telegramId
     ctx["data"].telegramId = telegramId;
+    methods.telegramId = telegramId
     ctx.reply ("Hello! Congrats for taking the first step to get AAHEADSTART in Adulting!🎉 I’m your friendly expense tracking bot. Before we get started, I’d like to get to know you a little better. What is your name?\n\n<i>By using this service, you agree to the terms and conditions governing your use of @AAheadstart_bot online service.</i>", {
         parse_mode: "HTML"
     })
@@ -98,12 +99,6 @@ step5.on("text", ctx => {
             retire: retire,
             insurance: insurance
         };
-        // methods.salaryBreakdown = {
-        //     savings: savings,
-        //     expense: expense,
-        //     retire: retire,
-        //     insurance: insurance
-        // }
         ctx.replyWithPhoto({
             source: "./assets/image.jpg"
         },

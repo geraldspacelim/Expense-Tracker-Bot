@@ -9,10 +9,8 @@ const expenseScene = require("./scenes/expenseScene").expenseScene
 const methods = require("./methods.js"); 
 const LocalSession = require("telegraf-session-local");
 const axios = require('axios');
-const converter = require('json-2-csv');
-const fs = require('fs');
-const Moment = require('moment-timezone')
-
+const Moment = require('moment-timezone');
+const Excel = require('exceljs');
 
 const property = "data";
 const localSession = new LocalSession({
@@ -22,16 +20,56 @@ const localSession = new LocalSession({
 bot.use(localSession.middleware(property));
 
 cron.schedule('0 0 1 * *', async () => {
-    const userTeleId = methods.userTeleId
-    await methods.getMontlyExpenseReport(userTeleId, methods.monthlyExpense).then(res => {
-        var caption = `This is your monthly expenses for ${res.month}.`
-        ctx.replyWithPhoto(res.url, {
-            caption: caption
+    const workbook = new Excel.Workbook();
+    const summary = workbook.addWorksheet('Summary');
+    const breakdown = workbook.addWorksheet('Breakdown');
+    const currentMonth = Moment().tz('Asia/Singapore').month() + 1
+    const telegramId = methods.telegramId
+    axios.get(`http://localhost:8080/api/getCurrentMonthExpense/${telegramId}`).then(res => {
+        if (res.data != []) {
+            summary.columns = [
+                { header: 'Category', key: 'category' },
+                { header: 'Total Expense', key: 'total_expense' }
+            ];
+            for (const category of res.data){
+                summary.addRow(
+                    { category: category.Category, total_expense:  `$${parseFloat(category.Total).toFixed(2)}`},
+                ); 
+            }
+        }  
+        axios.get(`http://localhost:8080/api/getAllCurrentMonthExpense/${telegramId}`).then(res => {
+            breakdown.columns = [
+                { header: 'Category', key: 'category' },
+                { header: 'Created On', key: 'created_on' },
+                { header: 'Expense', key: 'expense' },
+                { header: 'Description', key: 'description' }
+            ];
+            for (const item of res.data){
+                breakdown.addRow(
+                    { category: item.Category, created_on: item.CreatedOn, expense:  `$${parseFloat(item.Expense).toFixed(2)}`, description: item.Description},
+                ); 
+            }
+            workbook
+            .xlsx
+            .writeFile('Expense.xlsx')
+                .then(() => {
+                    bot.telegram.sendDocument(telegramId, {source: 'Expense.xlsx'}, {caption: `This is your expense report for the month of ${methods.calendar[currentMonth]}.`})
+            })
+            .catch((err) => {
+              console.log("err", err);
+            });
+        }).catch(e => {
+            console.log(e)
         })
-    }).catch(err => {
-        console.log(err)
+    }).catch (e => {
+        console.log(e)
     })
-});
+},
+    {
+        scheduled: true,
+        timezone: "Asia/Singapore"
+    }
+);
   
 
 const stage = new Stage([introScene, expenseScene], {default: 'introScene '})
@@ -42,11 +80,8 @@ bot.command('expense', ctx => ctx.scene.enter("expenseScene", {edit: false}))
 bot.on("callback_query", ctx => ctx.scene.enter("expenseScene", {edit: true, callback_data: ctx}))
 
 bot.command('report', async ctx  => {
-    await methods.getMontlyExpenseReport(ctx["data"].telegramId, ctx["data"].salaryBreakdown.expense).then(res => {
+    await methods.getMontlyExpenseReport(methods.telegramId, ctx["data"].salaryBreakdown["expense"]).then(res => {
         var caption = `This is your monthly expenses for ${res.month}.`
-        if (res.isOverSpent) {
-            caption += "\n\n🚨You have spent 80% of your budget this month! Please practice mindfulness in your expenses!"
-        }
         ctx.replyWithPhoto(res.url, {
             caption: caption
         })
@@ -56,40 +91,51 @@ bot.command('report', async ctx  => {
 })
 
 bot.command('test', async ctx => {
-    let caption = ""
-    let expenses = ""
-    axios.get(`http://localhost:8080/api/getCurrentMonthExpense/${ctx.from.id}`).then(res => {
+    const workbook = new Excel.Workbook();
+    const summary = workbook.addWorksheet('Summary');
+    const breakdown = workbook.addWorksheet('Breakdown');
+    const currentMonth = Moment().tz('Asia/Singapore').month() + 1
+    const telegramId = methods.telegramId
+    axios.get(`http://localhost:8080/api/getCurrentMonthExpense/${telegramId}`).then(res => {
         if (res.data != []) {
-            var total = 0
+            summary.columns = [
+                { header: 'Category', key: 'category' },
+                { header: 'Total Expense', key: 'total_expense' }
+            ];
             for (const category of res.data){
-              const expenseValue = parseFloat(category.Total)
-              expenses += `${category.Category}: $${expenseValue.toFixed(2)}\n`
-            //   data.push(expenseValue)
-              total += expenseValue
+                summary.addRow(
+                    { category: category.Category, total_expense:  `$${parseFloat(category.Total).toFixed(2)}`},
+                ); 
             }
         }  
-        const currentTime = Moment().tz('Asia/Singapore')
-        const monthNum = currentTime.month() + 1
-        const month = methods.calendar[monthNum]
-        caption += `Your total expense for ${month} is $${total.toFixed(2)}. Below is a summary of your expenses:\n${expenses}\n\nAttached is the in-depth breakdown of your expesnses.`
-        // console.log(caption)
+        axios.get(`http://localhost:8080/api/getAllCurrentMonthExpense/${telegramId}`).then(res => {
+            breakdown.columns = [
+                { header: 'Category', key: 'category' },
+                { header: 'Created On', key: 'created_on' },
+                { header: 'Expense', key: 'expense' },
+                { header: 'Description', key: 'description' }
+            ];
+            for (const item of res.data){
+                breakdown.addRow(
+                    { category: item.Category, created_on: item.CreatedOn, expense:  `$${parseFloat(item.Expense).toFixed(2)}`, description: item.Description},
+                ); 
+            }
+            workbook
+            .xlsx
+            .writeFile('Expense.xlsx')
+                .then(() => {
+                    bot.telegram.sendDocument(telegramId, {source: 'Expense.xlsx'}, {caption: `This is your expense report for the month of ${methods.calendar[currentMonth]}.`})
+            })
+            .catch((err) => {
+              console.log("err", err);
+            });
+        }).catch(e => {
+            console.log(e)
+        })
     }).catch (e => {
         console.log(e)
     })
+})
 
-    axios.get(`http://localhost:8080/api/getAllCurrentMonthExpense/${ctx.from.id}`).then(res => {
-        converter.json2csv(res.data, (err, csv) => {
-            if (err) {
-                throw err;
-            }
-            fs.writeFileSync('report.csv', csv);
-            ctx.replyWithDocument({source: 'report.csv'},{ caption: caption})
-        });
-    }).catch(e => {
-        console.log(e)
-    })
-    // ctx.reply(caption)
-
-})  
 
 bot.launch()

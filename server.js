@@ -57,7 +57,7 @@ app.get("/api/getCurrentMonthExpense/:id", (req, res) => {
     const currentTime = Moment().tz('Asia/Singapore')
     const month = String(currentTime.month() + 1).padStart(2, '0')
     const year = currentTime.year()
-    sql.query(`SELECT SUM(Expense) AS 'Total', Category FROM Expenses where ID = ${id} AND CreatedON like '${year}%-${month}%' GROUP BY Category`, 
+    sql.query(`SELECT Category, SUM(Expense) AS 'Total' from Expenses where ID = ${id} AND CreatedON like '${year}%-${month}%' GROUP BY Category`, 
     (error, result) => {
         if(error) throw error;
         res.send(result)

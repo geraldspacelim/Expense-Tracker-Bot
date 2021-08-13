@@ -6,8 +6,7 @@ const category = ["Work Food", "Good Food", "Coffee", "Alcohol", "Necessities", 
 const occupation = ["Polytechnic", "University", "Fresh Graduate", "Employed", "Unemployed"]
 const budgetAllocation = ["Cash Savings & Loans", "Expenses", "Retirement Planning", "Insurance"]
 const answers = ["Yes", "No"]
-
-var calendar = {
+const calendar = {
               1 : "January",
               2 : "Feburary",
               3 : "March",
@@ -21,6 +20,13 @@ var calendar = {
               11 : "November",
               12 : "December"
             }
+
+var telegramId = -1
+
+function capitalize(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 
 async function getMontlyExpenseReport(telegramId, monthlyExpense) {
     try {
@@ -77,7 +83,6 @@ async function getMontlyExpenseReport(telegramId, monthlyExpense) {
             return ({
               url: myChart.getUrl(),
               month:  calendar[parseInt(month)],
-              isOverSpent: total/monthlyExpense >= 0.8 
             })
         }
       } catch (error) {
@@ -92,3 +97,5 @@ exports.budgetAllocation = budgetAllocation
 exports.getMontlyExpenseReport = getMontlyExpenseReport
 exports.answers = answers
 exports.calendar = calendar
+exports.telegramId = telegramId
+exports.capitalize = capitalize
