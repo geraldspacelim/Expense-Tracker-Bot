@@ -2,9 +2,6 @@ const axios = require('axios');
 const Moment = require('moment-timezone')
 const QuickChart = require('quickchart-js');
 
-// let userTeleId = undefined
-// let salaryBreakdown = {}
-
 const category = ["Work Food", "Good Food", "Coffee", "Alcohol", "Necessities", "Shopping & Leisure", "Ciggs", "Private Transport", "Groceries", "Others" ]
 const occupation = ["Polytechnic", "University", "Fresh Graduate", "Employed", "Unemployed"]
 const budgetAllocation = ["Cash Savings & Loans", "Expenses", "Retirement Planning", "Insurance"]

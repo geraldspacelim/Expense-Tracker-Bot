@@ -2,7 +2,6 @@ const WizardScene = require("telegraf/scenes/wizard");
 const Composer = require("telegraf/composer");
 const axios = require('axios');
 const methods = require("../methods.js");
-const e = require("express");
 
 const step1 = ctx => {
     ctx.wizard.state.data = {};
