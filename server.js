@@ -66,6 +66,7 @@ app.get("/api/getCurrentMonthExpense/:id", (req, res) => {
 
 app.get("/api/getAllCurrentMonthExpense/:id", (req,res) => {
     const id = req.params.id
+    const currentTime = Moment().tz('Asia/Singapore')
     const month = String(currentTime.month() + 1).padStart(2, '0')
     const year = currentTime.year()
     sql.query(`select Category, CreatedOn, Expense, Description from Expenses where ID = ${id} AND CreatedOn like '${year}%-${month}%' order by CreatedOn`,

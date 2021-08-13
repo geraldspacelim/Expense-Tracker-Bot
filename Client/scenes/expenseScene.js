@@ -107,7 +107,7 @@ step5.on("text", ctx => {
             if (expense.description != "")  {
                 expenseText += `\nDescription: ${expense.description}`
             }  
-            ctx.answerCbQuery()
+            // ctx.answerCbQuery()
             callback_data.editMessageText(`Your expense has been updated\n\n${expenseText}`, {
                 reply_markup: {
                     inline_keyboard: [

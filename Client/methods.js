@@ -91,3 +91,4 @@ exports.occupation = occupation
 exports.budgetAllocation = budgetAllocation
 exports.getMontlyExpenseReport = getMontlyExpenseReport
 exports.answers = answers
+exports.calendar = calendar
