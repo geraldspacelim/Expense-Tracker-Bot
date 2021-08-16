@@ -30,6 +30,16 @@ app.post("/api/addNewUser", (req, res) => {
     })
 })
 
+app.get("/api/getSubscriber/:id", (req, res) => {
+    const id = req.params.id
+    sql.query(`select * from Subscribers where ID = ${id}`, 
+    (error, result) => {
+        if(error) throw error;
+        res.send(result )
+    }
+    )
+})
+
 app.post("/api/addNewExpense", (req, res) => {
     const uuid = nanoid()
     const id = req.body.id
@@ -68,6 +78,15 @@ app.get("/api/getCurrentMonthExpense/:id", (req, res) => {
     })
 })
 
+app.get("/api/getTotalExpense/:id", (req, res) => {
+    const id = req.params.id
+    sql.query(`select sum(Expense) as Total from Expenses where ID = ${id}`, 
+    (error, result) => {
+        if(error) throw error;
+        res.send(result)
+    })
+})
+
 app.get("/api/getAllCurrentMonthExpense/:id", (req,res) => {
     const id = req.params.id
     const currentTime = Moment().tz('Asia/Singapore')
@@ -93,6 +112,14 @@ app.post("/api/updateSubscriber/:id", (req,res) => {
         res.status(200).send()
     }
     )
+})
+
+app.get("/api/authenticate/:id", (req, res) => {
+    const id = req.params.id
+    sql.query(`Select * from Credentials where ID = ${id}`, 
+    (error, result) => {
+        res.send(result)
+    })
 })
 
 app.listen(port, () => {
