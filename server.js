@@ -19,7 +19,11 @@ app.post("/api/addNewUser", (req, res) => {
     const dob = req.body.dob
     const occupation = req.body.occupation
     const salary = req.body.salary
-    sql.query(`insert into Subscribers values (${id}, '${name}', '${dob}', '${occupation}', ${salary}) on duplicate key update Username = '${name}', Dob = '${dob}', Occupation = '${occupation}', Salary = ${salary}`, 
+    const savings = req.body.savings 
+    const expense = req.body.expense
+    const retirement = req.body.retirement
+    const insurance = req.body.insurance 
+    sql.query(`insert into Subscribers values (${id}, '${name}', '${dob}', '${occupation}', ${salary}, ${savings}, ${expense}, ${retirement}, ${insurance}) on duplicate key update Username = '${name}', Dob = '${dob}', Occupation = '${occupation}', Salary = ${salary}`, 
     (error, result) => {
         if(error) throw error;
         res.send('new user record added successfully!')
@@ -73,6 +77,20 @@ app.get("/api/getAllCurrentMonthExpense/:id", (req,res) => {
     (error, result) => {
         if(error) throw error; 
         res.send(result)
+    }
+    )
+})
+
+app.post("/api/updateSubscriber/:id", (req,res) => {
+    const id = req.params.id
+    const savings = req.body.savings 
+    const expense = req.body.expense
+    const retirement = req.body.retirement
+    const insurance = req.body.insurance 
+    sql.query(`update Subscribers set Savings = ${savings}, Expense = ${expense}, Retirement = ${retirement}, Insurance = ${insurance} where ID = ${id}`,
+    (error, result) => {
+        if(error) throw error;
+        res.status(200).send()
     }
     )
 })

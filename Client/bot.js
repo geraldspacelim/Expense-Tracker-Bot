@@ -20,23 +20,58 @@ const localSession = new LocalSession({
 bot.use(localSession.middleware(property));
 
 cron.schedule('0 0 1 * *', async () => {
-    const workbook = new Excel.Workbook();
-    const summary = workbook.addWorksheet('Summary');
-    const breakdown = workbook.addWorksheet('Breakdown');
     const currentMonth = Moment().tz('Asia/Singapore').month() + 1
-    const telegramId = methods.telegramId
+    const telegramId = ctx["data"].telegramId
+    const workbook = new Excel.Workbook();
+    const summary = workbook.addWorksheet('Summary', {views: [{showGridLines: false}]});
+    const aaheadstart = workbook.addImage({
+        filename: './assets/excel.jpg',
+        extension: 'jpeg',
+        useStyles: true
+      });
+    summary.addImage(aaheadstart, 'A1:C14')
+    const breakdown = workbook.addWorksheet('Breakdown');
+    
+    summary.getRow(19).values = ['Category', 'Total Expense']
+    summary.getCell('A16').value = `Month Expense Report for ${ ctx["data"].name}`
+    summary.getCell('A16').font = {
+        size: 12,
+        bold: true
+    }
+    summary.getCell('A17').value = `Details of your Expense account for ${methods.calendar[currentMonth]}`
+    summary.getCell('A17').font = {
+        size: 12,
+        bold: true
+    }
     axios.get(`http://localhost:8080/api/getCurrentMonthExpense/${telegramId}`).then(res => {
         if (res.data != []) {
             summary.columns = [
-                { header: 'Category', key: 'category' },
-                { header: 'Total Expense', key: 'total_expense' }
+                {key: 'category', width: 20},
+                {key: 'total_expense', width: 10}
             ];
+            summary.getCell('A19').font = {
+                bold: true
+            }
+            summary.getCell('B19').font = {
+                bold: true
+            }
+            var totalExpenses = 0
+
             for (const category of res.data){
+                totalExpenses += category.Total
                 summary.addRow(
-                    { category: category.Category, total_expense:  `$${parseFloat(category.Total).toFixed(2)}`},
+                    { category: category.Category, total_expense:  `$${category.Total.toFixed(2)}`},
                 ); 
             }
-        }  
+        }
+        var summary_row = summary.addRow(
+            { total_expense:  `$${totalExpenses.toFixed(2)}`},
+        ); 
+        summary.getCell(summary_row._cells[1]._address).border = {
+            top: {style:'thin'},
+            bottom: {style:'double'}
+        }
+
         axios.get(`http://localhost:8080/api/getAllCurrentMonthExpense/${telegramId}`).then(res => {
             breakdown.columns = [
                 { header: 'Category', key: 'category' },
@@ -46,7 +81,7 @@ cron.schedule('0 0 1 * *', async () => {
             ];
             for (const item of res.data){
                 breakdown.addRow(
-                    { category: item.Category, created_on: item.CreatedOn, expense:  `$${parseFloat(item.Expense).toFixed(2)}`, description: item.Description},
+                    { category: item.Category, created_on: item.CreatedOn.split('T')[0], expense:  `$${parseFloat(item.Expense).toFixed(2)}`, description: item.Description},
                 ); 
             }
             workbook
@@ -80,7 +115,7 @@ bot.command('expense', ctx => ctx.scene.enter("expenseScene", {edit: false}))
 bot.on("callback_query", ctx => ctx.scene.enter("expenseScene", {edit: true, callback_data: ctx}))
 
 bot.command('report', async ctx  => {
-    await methods.getMontlyExpenseReport(methods.telegramId, ctx["data"].salaryBreakdown["expense"]).then(res => {
+    await methods.getMontlyExpenseReport(methods.telegramId).then(res => {
         var caption = `This is your monthly expenses for ${res.month}.`
         ctx.replyWithPhoto(res.url, {
             caption: caption
@@ -91,23 +126,58 @@ bot.command('report', async ctx  => {
 })
 
 bot.command('test', async ctx => {
-    const workbook = new Excel.Workbook();
-    const summary = workbook.addWorksheet('Summary');
-    const breakdown = workbook.addWorksheet('Breakdown');
     const currentMonth = Moment().tz('Asia/Singapore').month() + 1
-    const telegramId = methods.telegramId
+    const telegramId = ctx["data"].telegramId
+    const workbook = new Excel.Workbook();
+    const summary = workbook.addWorksheet('Summary', {views: [{showGridLines: false}]});
+    const aaheadstart = workbook.addImage({
+        filename: './assets/excel.jpg',
+        extension: 'jpeg',
+        useStyles: true
+      });
+    summary.addImage(aaheadstart, 'A1:C14')
+    const breakdown = workbook.addWorksheet('Breakdown');
+    
+    summary.getRow(19).values = ['Category', 'Total Expense']
+    summary.getCell('A16').value = `Month Expense Report for ${ ctx["data"].name}`
+    summary.getCell('A16').font = {
+        size: 12,
+        bold: true
+    }
+    summary.getCell('A17').value = `Details of your Expense account for ${methods.calendar[currentMonth]}`
+    summary.getCell('A17').font = {
+        size: 12,
+        bold: true
+    }
     axios.get(`http://localhost:8080/api/getCurrentMonthExpense/${telegramId}`).then(res => {
         if (res.data != []) {
             summary.columns = [
-                { header: 'Category', key: 'category' },
-                { header: 'Total Expense', key: 'total_expense' }
+                {key: 'category', width: 20},
+                {key: 'total_expense', width: 10}
             ];
+            summary.getCell('A19').font = {
+                bold: true
+            }
+            summary.getCell('B19').font = {
+                bold: true
+            }
+            var totalExpenses = 0
+
             for (const category of res.data){
+                totalExpenses += category.Total
                 summary.addRow(
-                    { category: category.Category, total_expense:  `$${parseFloat(category.Total).toFixed(2)}`},
+                    { category: category.Category, total_expense:  `$${category.Total.toFixed(2)}`},
                 ); 
             }
-        }  
+        }
+        var summary_row = summary.addRow(
+            { total_expense:  `$${totalExpenses.toFixed(2)}`},
+        ); 
+        summary.getCell(summary_row._cells[1]._address).border = {
+            top: {style:'thin'},
+            bottom: {style:'double'}
+        }
+
         axios.get(`http://localhost:8080/api/getAllCurrentMonthExpense/${telegramId}`).then(res => {
             breakdown.columns = [
                 { header: 'Category', key: 'category' },
@@ -117,7 +187,7 @@ bot.command('test', async ctx => {
             ];
             for (const item of res.data){
                 breakdown.addRow(
-                    { category: item.Category, created_on: item.CreatedOn, expense:  `$${parseFloat(item.Expense).toFixed(2)}`, description: item.Description},
+                    { category: item.Category, created_on: item.CreatedOn.split('T')[0], expense:  `$${parseFloat(item.Expense).toFixed(2)}`, description: item.Description},
                 ); 
             }
             workbook

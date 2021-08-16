@@ -28,7 +28,7 @@ function capitalize(string) {
 }
 
 
-async function getMontlyExpenseReport(telegramId, monthlyExpense) {
+async function getMontlyExpenseReport(telegramId) {
     try {
         const res = await axios.get(`http://localhost:8080/api/getCurrentMonthExpense/${telegramId}`);
         if (res.data != []) {

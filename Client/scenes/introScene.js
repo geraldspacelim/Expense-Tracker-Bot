@@ -8,7 +8,6 @@ const step1 = ctx => {
     const telegramId = ctx.from.id
     ctx.wizard.state.data.id = telegramId
     ctx["data"].telegramId = telegramId;
-    methods.telegramId = telegramId
     ctx.reply ("Hello! Congrats for taking the first step to get AAHEADSTART in Adulting!🎉 I’m your friendly expense tracking bot. Before we get started, I’d like to get to know you a little better. What is your name?\n\n<i>By using this service, you agree to the terms and conditions governing your use of @AAheadstart_bot online service.</i>", {
         parse_mode: "HTML"
     })
@@ -19,6 +18,7 @@ const step2 = new Composer();
 
 step2.on("text", ctx => {
     ctx.wizard.state.data.name = ctx.message.text
+    ctx["data"].name = ctx.wizard.state.data.name
     ctx.reply("What is your date of birth? (DD-MM-YYYY)")
     return ctx.wizard.next();
 })
@@ -87,23 +87,22 @@ step5.on("text", ctx => {
         return ctx.wizard.selectStep(currentStepIndex);
     }
     const salary = parseFloat(ctx.message.text).toFixed(2)
+    ctx.wizard.state.data.savings = (0.4*salary).toFixed(2)
+    ctx.wizard.state.data.expense = (0.3*salary).toFixed(2)
+    ctx.wizard.state.data.retirement = (0.2*salary).toFixed(2)
+    ctx.wizard.state.data.insurance = (0.1*salary).toFixed(2)  
     ctx.wizard.state.data.salary =  salary
+    ctx["data"].savings = (0.4*salary).toFixed(2)
+    ctx["data"].expense = (0.3*salary).toFixed(2)
+    ctx["data"].retirement = (0.2*salary).toFixed(2)
+    ctx["data"].insurance = (0.1*salary).toFixed(2)  
+    ctx["data"].salary = salary
     axios.post('http://localhost:8080/api/addNewUser', ctx.wizard.state.data).then(function (res){
-        const savings = 0.4*salary
-        const expense = 0.3*salary
-        const retire = 0.2*salary
-        const insurance = 0.1*salary 
-        ctx["data"].salaryBreakdown = {
-            savings: savings,
-            expense: expense,
-            retire: retire,
-            insurance: insurance
-        };
         ctx.replyWithPhoto({
             source: "./assets/image.jpg"
         },
             {
-                caption: "Recommended allocation for: \n40% Cash Savings & Loans: $" + savings + "\n30% Expenses: $" + expense + "\n20% Retirement Planning: $" + retire + "\n10% Insurance: $" + insurance + "\n\nYour goal is to keep your monthly expenses below $" + expense + ". I will be there with you every step of the way! Good luck! 👍🏻 \n\nWould you like to amend the allocated budget for any of the categories above?",
+                caption: "Recommended allocation for: \n40% Cash Savings & Loans: $" + ctx.wizard.state.data.savings + "\n30% Expenses: $" + ctx.wizard.state.data.expense  + "\n20% Retirement Planning: $" + ctx.wizard.state.data.retirement + "\n10% Insurance: $" + ctx.wizard.state.data.insurance + "\n\nYour goal is to keep your monthly expenses below $" + ctx.wizard.state.data.expense + ". I will be there with you every step of the way! Good luck! 👍🏻 \n\nWould you like to amend the allocated budget for any of the categories above?",
                 reply_markup: {
                     keyboard: [
                         [
@@ -117,7 +116,6 @@ step5.on("text", ctx => {
             }
         )
         return ctx.wizard.next();
-        // return ctx.scene.leave()
     }).catch(function (error) {
         console.log(error)
     }) 
@@ -157,7 +155,7 @@ step6.on("text", ctx => {
         return ctx.wizard.next();
     }
     else {
-        const endConvo = `Your goal is to keep your monthly expenses below $${ctx["data"].salaryBreakdown.expense}. I will be there with you every step of the way! Good luck! 👍🏻`
+        const endConvo = `Your goal is to keep your monthly expenses below $${ctx.wizard.state.data.expense}. I will be there with you every step of the way! Good luck! 👍🏻`
         ctx.reply(endConvo)
         return ctx.scene.leave()
     }
@@ -208,8 +206,7 @@ step8.on("text", ctx => {
             budgetAllocationMap = 'insurance'
             break;
     }
-    // methods.salaryBreakdown[budgetAllocationMap] = parseFloat(budget)
-    ctx["data"].salaryBreakdown[budgetAllocationMap] = parseFloat(budget)
+    ctx.wizard.state.data[budgetAllocationMap] = parseFloat(budget).toFixed(2) 
     ctx.reply("Would you like to amend the budget for any other categories above?", {
         reply_markup: {
             keyboard: [
@@ -258,16 +255,23 @@ step9.on("text", ctx => {
         })
         return ctx.wizard.selectStep(6);
     } else {
-        var endConvo = `Your goal is to keep your monthly expenses below $${ctx["data"].salaryBreakdown.expense}. I will be there with you every step of the way! Good luck! 👍🏻`
-         if (ctx.wizard.state.data.isAmend) {
-            const updatedBudgetAllocation = `This is your updated customized allocation:\nCash Savings & Loans: $${ctx["data"].salaryBreakdown.savings} \nExpenses: $${ctx["data"].salaryBreakdown.expense}\nRetirement Planning: $${ctx["data"].salaryBreakdown.retire}\nInsurance: $${ctx["data"].salaryBreakdown.insurance}`
-            endConvo = updatedBudgetAllocation + "\n\n" + endConvo
-        }
-        ctx.reply(endConvo)
-        return ctx.scene.leave()
+        axios.post(`http://localhost:8080/api/updateSubscriber/${ctx.from.id}`, ctx.wizard.state.data).then(res => {
+            if(res.status == 200) {
+                var endConvo = `Your goal is to keep your monthly expenses below $${ctx.wizard.state.data.expense}. I will be there with you every step of the way! Good luck! 👍🏻`
+            if (ctx.wizard.state.data.isAmend) {
+                const updatedBudgetAllocation = `This is your updated customized allocation:\nCash Savings & Loans: $${ctx.wizard.state.data.savings} \nExpenses: $${ctx.wizard.state.data.expense}\nRetirement Planning: $${ctx.wizard.state.data.retirement}\nInsurance: $${ctx.wizard.state.data.insurance}`
+                endConvo = updatedBudgetAllocation + "\n\n" + endConvo
+            }
+            ctx.reply(endConvo)
+            return ctx.scene.leave()
+            }
+            
+        }).catch(err => {
+            console.log(err)
+        })
+        
     }
 })
-
 
 
 
