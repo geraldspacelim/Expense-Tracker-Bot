@@ -1,9 +1,12 @@
 const WizardScene = require("telegraf/scenes/wizard");
 const Composer = require("telegraf/composer");
 const axios = require('axios');
+const converter = require('json-2-csv');
+const bcrypt = require('bcrypt');
+const fs = require('fs');
 
 const step1 = ctx => {
-    "Please enter the passphrase:"
+    ctx.reply("Please enter the passphrase:")
     return ctx.wizard.next()
 }
 
@@ -15,7 +18,43 @@ step2.on("text", ctx => {
         if (res.data.length == 1) {
             bcrypt.compare(password, res.data[0].hashedPassword, function(err, result) {
                 if (result == true) {
-                    //get db
+                    axios.get(`http://localhost:8080/api/allSubscribers`).then(res => {
+                        converter.json2csv(res.data, (err, csv) => {
+                            if (err) {
+                                throw err;
+                            }
+                            fs.writeFileSync('Subscribers.csv', csv);
+                        });
+                        axios.get(`http://localhost:8080/api/allExpenses`).then(res => {
+                            converter.json2csv(res.data, (err, csv) => {
+                                if (err) {
+                                    throw err;
+                                }
+                                fs.writeFileSync('Expenses.csv', csv);
+                            });
+                            ctx.replyWithMediaGroup([
+                                {
+                                    type: 'document',
+                                    media: {
+                                        source: 'Subscribers.csv'
+                                    }
+
+                                },
+                                {
+                                    type: 'document',
+                                    media: {
+                                        source: 'Expenses.csv'
+                                    }
+
+                                }
+                            ])
+                            ctx.scene.leave()
+                        }).catch(err => {
+                            console.log(err)
+                        })
+                    }).catch(err => {
+                        console.log(err)
+                    })
                 } else{
                     ctx.reply("Wrong passphrase")
                 }

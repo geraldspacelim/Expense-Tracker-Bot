@@ -118,6 +118,24 @@ app.get("/api/authenticate/:id", (req, res) => {
     const id = req.params.id
     sql.query(`Select * from Credentials where ID = ${id}`, 
     (error, result) => {
+        if(error) throw error;
+        res.send(result)
+    })
+})
+
+app.get("/api/allSubscribers", (req, res) => {
+    sql.query(`select * from Subscribers`, 
+    (error, result) => {
+        if(error) throw error;
+        res.send(result)
+    })
+})
+
+
+app.get("/api/allExpenses", (req, res) => {
+    sql.query(`select * from Expenses order by ID`, 
+    (error, result) => {
+        if(error) throw error;
         res.send(result)
     })
 })
