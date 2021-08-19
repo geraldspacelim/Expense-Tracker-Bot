@@ -2,7 +2,7 @@ const WizardScene = require("telegraf/scenes/wizard");
 const Composer = require("telegraf/composer");
 const axios = require('axios');
 const converter = require('json-2-csv');
-const bcrypt = require('bcrypt');
+// const bcrypt = require('bcrypt');
 const fs = require('fs');
 
 const step1 = ctx => {

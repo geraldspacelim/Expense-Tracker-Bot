@@ -22,8 +22,9 @@ app.post("/api/addNewUser", (req, res) => {
     const savings = req.body.savings 
     const expense = req.body.expense
     const retirement = req.body.retirement
-    const insurance = req.body.insurance 
-    sql.query(`insert into Subscribers values (${id}, '${name}', '${dob}', '${occupation}', ${salary}, ${savings}, ${expense}, ${retirement}, ${insurance}) on duplicate key update Username = '${name}', Dob = '${dob}', Occupation = '${occupation}', Salary = ${salary}`, 
+    const insurance = req.body.insurance
+    const username = req.body.username  
+    sql.query(`insert into Subscribers values (${id}, '${name}', '${dob}', '${occupation}', ${salary}, ${savings}, ${expense}, ${retirement}, ${insurance}, '${username}', false, false) on duplicate key update Username = '${name}', Dob = '${dob}', Occupation = '${occupation}', Salary = ${salary}, TelegramId = '${username}'`, 
     (error, result) => {
         if(error) throw error;
         res.send('new user record added successfully!')

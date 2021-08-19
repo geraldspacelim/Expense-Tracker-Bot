@@ -2,13 +2,15 @@ const WizardScene = require("telegraf/scenes/wizard");
 const Composer = require("telegraf/composer");
 const axios = require('axios');
 const methods = require("../methods.js");
+const fs = require("fs");
+
 
 const step1 = ctx => {
     ctx.wizard.state.data = {};
     const telegramId = ctx.from.id
     ctx.wizard.state.data.id = telegramId
-    ctx["data"].telegramId = telegramId;
-    ctx.reply ("Hello! Congrats for taking the first step to get AAHEADSTART in Adulting!🎉 I’m your friendly expense tracking bot. Before we get started, I’d like to get to know you a little better. What is your name?\n\n<i>By using this service, you agree to the terms and conditions governing your use of @AAheadstart_bot online service.</i>", {
+    ctx.wizard.state.data.username = ctx.from.username
+    ctx.reply ("Hello! Congrats for taking the first step to get <b>AAHEADSTART</b> in Adulting!🎉 I’m your friendly expense tracking bot. Before we get started, I’d like tgio get to know you a little better. What is your name?\n\n<i>By using this service, you agree to the terms and conditions governing your use of @AAheadstart_bot online service.</i>", {
         parse_mode: "HTML"
     })
     return ctx.wizard.next();
@@ -18,7 +20,6 @@ const step2 = new Composer();
 
 step2.on("text", ctx => {
     ctx.wizard.state.data.name = ctx.message.text
-    ctx["data"].name = ctx.wizard.state.data.name
     ctx.reply("What is your date of birth? (DD-MM-YYYY)")
     return ctx.wizard.next();
 })
