@@ -6,12 +6,103 @@ const port = process.env.PORT || 8080;
 const { nanoid } = require('nanoid')
 const sql = require("./connection")
 const Moment = require('moment-timezone')
+const methods = require("./methods.js");
+const axios = require('axios');
+const cron = require('node-cron')
+const Excel = require('exceljs');
+const Telegraf = require('telegraf')
+const bot = new Telegraf('1939243495:AAFUFsqmT5fxyb6Ds6fvvLvChsRduuqn0Iw');
+
 
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+cron.schedule('0 12 * * *', async () => {
+    
+    var expense = -1
+    var total = -1 
+    axios.get(`http://localhost:8080/api/getSubscriber/${ctx.from.id}`).then(res => {
+        expense = res.data[0].Expense
+    }).catch (err => {
+        console.log(res)
+    }) 
+    axios.get(`http://localhost:8080/api/getTotalExpense/${ctx.from.id}`).then(res => {
+        total = res.data[0].Total
+        if (total/expense >= 0.8) {
+            bot.telegram.sendMessage(ctx["data"].telegramId, "🚨You have spent 80% of your budget this month! Please practice mindfulness in your expenses!")
+        }
+    }).catch (err => {
+        console.log(err)
+    }) 
+   
+}, {
+    scheduled: true,
+    timezone: "Asia/Singapore"
+})
+
+
+
+cron.schedule('0 0 1 * *', () => {
+    sql.query(`select * from Subscribers`, 
+    (error, result) => {
+        if(error) throw error;
+        if (result.data != []) {
+            result.data.forEach(async user => {
+                await sendProgressReport(user).then((_) => {}).catch(err => console.log(err))
+            })
+        }
+        res.status(200).send()
+    })
+},
+    {
+        scheduled: true,
+        timezone: "Asia/Singapore"
+    }
+);
+
+async function checkExpenseLimit(user) {
+    //cehck for second
+    sql.query(`select sum(Expense) as Total from Expenses where ID = ${user.ID}`, 
+    (error, result) => {
+        if(error) throw error;
+        //check for second
+        if (result[0].Total/user.Expense >= 1) {
+            sql.query(`update Subscribers set SecondNoti = true where ID = ${user.ID}`, 
+            (error, result) => {
+                if(error) throw error;
+                bot.telegram.sendMessage(user.ID, "🚨You have spent 100% of your budget this month! Please practice mindfulness in your expenses!")
+                return
+            }) 
+        } else if (result[0].Total/user.Expense >= 0.8 && user.FirstNoti != 1) {
+            sql.query(`update Subscribers set firstNoti = true where ID = ${user.ID}`, 
+            (error, result) => {
+                if(error) throw error;
+                bot.telegram.sendMessage(user.ID, "🚨You have spent 80% of your budget this month! Please practice mindfulness in your expenses!")
+                return
+            }) 
+        }
+    })
+}
+
+app.get("/api/test", async (req, res) => {
+    sql.query(`select * from Subscribers`, 
+    (error, result) => {
+        if(error) throw error;
+        if (result != []) {
+            result.forEach(async user => {
+                const firstNoti = user.FirstNoti == 0 ? false : true
+                const secondNoti = user.SecondNoti == 0 ? false : true
+                console.log(firstNoti)
+                console.log(secondNoti)
+                if (!(firstNoti && secondNoti) || !secondNoti) {
+                    await checkExpenseLimit(user).then((_) => {}).catch(err => console.log(err))
+                }
+            })
+        }
+    })
+})
 
 app.post("/api/addNewUser", (req, res) => {
     const id = req.body.id
@@ -140,6 +231,97 @@ app.get("/api/allExpenses", (req, res) => {
         res.send(result)
     })
 })
+
+async function sendProgressReport(user) {
+    const currentMonth = Moment().tz('Asia/Singapore').month() + 1
+    const workbook = new Excel.Workbook();
+    const summary = workbook.addWorksheet('Summary', {views: [{showGridLines: false}]});
+    const currentTime = Moment().tz('Asia/Singapore')
+    const month = currentMonth.toString().padStart(2, '0')
+    const year = currentTime.year()
+    const aaheadstart = workbook.addImage({
+        filename: './assets/excel.jpg',
+        extension: 'jpeg',
+        useStyles: true
+        });
+    summary.addImage(aaheadstart, 'A1:C14')
+    const breakdown = workbook.addWorksheet('Breakdown');
+    
+    summary.getRow(19).values = ['Category', 'Total Expense']
+    summary.getCell('A16').value = `Month Expense Report for ${user.Username}`
+    summary.getCell('A16').font = {
+        size: 12,
+        bold: true
+    }
+    summary.getCell('A17').value = `Details of your Expense account for ${methods.calendar[currentMonth]}`
+    summary.getCell('A17').font = {
+        size: 12,
+        bold: true
+    }
+    sql.query(`SELECT Category, SUM(Expense) AS 'Total' from Expenses where ID = ${user.ID} AND CreatedON like '${year}%-${month}%' GROUP BY Category`, 
+    (error, result) => {
+        if(error) throw error;
+        if (result != []) {
+            summary.columns = [
+                {key: 'category', width: 20},
+                {key: 'total_expense', width: 10}
+            ];
+            summary.getCell('A19').font = {
+                bold: true
+            }
+            summary.getCell('B19').font = {
+                bold: true
+            }
+            var totalExpenses = 0
+
+            for (const category of result){
+                totalExpenses += category.Total
+                summary.addRow(
+                    { category: category.Category, total_expense:  `$${category.Total.toFixed(2)}`},
+                ); 
+            }
+        }
+        var summary_row = summary.addRow(
+            { total_expense:  `$${totalExpenses.toFixed(2)}`},
+        ); 
+        summary.getCell(summary_row._cells[1]._address).border = {
+            top: {style:'thin'},
+            bottom: {style:'double'}
+        }
+        sql.query(`select Category, CreatedOn, Expense, Description from Expenses where ID = ${user.ID} AND CreatedOn like '${year}%-${month}%' order by CreatedOn`,
+        (error, result) => {
+            if(error) throw error; 
+            if (result != []) {
+                breakdown.columns = [
+                    { header: 'Category', key: 'category' },
+                    { header: 'Created On', key: 'created_on' },
+                    { header: 'Expense', key: 'expense' },
+                    { header: 'Description', key: 'description' }
+                ];
+                for (const item of result){
+                    breakdown.addRow(
+                        { category: item.Category, created_on: item.CreatedOn, expense:  `$${parseFloat(item.Expense).toFixed(2)}`, description: item.Description},
+                    ); 
+                }
+                workbook
+                .xlsx
+                .writeFile(`./Records/${user.ID}-${methods.calendar[currentMonth]}-${year}.xlsx`)
+                    .then(() =>  {
+                        bot.telegram.sendDocument(user.ID, {source: `./Records/${user.ID}-${methods.calendar[currentMonth]}-${year}.xlsx`}, {caption: `This is your expense report for the month of ${methods.calendar[currentMonth]}.`}).then((_) => {
+                            sql.query(`update Subscribers set FirstNoti = false, SecondNoti = false where ID = ${user.ID}`,
+                            (error, result) => {
+                                if(error) throw error;
+                                return 
+                            })
+                        })
+                    })
+                .catch((err) => {
+                    console.log("err", err);
+                });
+            }
+        })
+    })
+}
 
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`)

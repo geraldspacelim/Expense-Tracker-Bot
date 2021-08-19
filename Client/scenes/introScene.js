@@ -10,7 +10,7 @@ const step1 = ctx => {
     const telegramId = ctx.from.id
     ctx.wizard.state.data.id = telegramId
     ctx.wizard.state.data.username = ctx.from.username
-    ctx.reply ("Hello! Congrats for taking the first step to get <b>AAHEADSTART</b> in Adulting!🎉 I’m your friendly expense tracking bot. Before we get started, I’d like tgio get to know you a little better. What is your name?\n\n<i>By using this service, you agree to the terms and conditions governing your use of @AAheadstart_bot online service.</i>", {
+    ctx.reply ("Hello! Congrats for taking the first step to get <b>AAHEADSTART</b> in Adulting!🎉 I’m your friendly expense tracking bot. Before we get started, I’d like tgio get to know you a little better. What is your name?\n\n<i>By using this service, you agree to the <a href='https://www.aia.com.sg/en/campaigns-promotions/aia-star-protector-plus-offer-2018/marketing-consent.html'>terms and conditions</a> governing your use of @AAheadstart_bot online service.</i>", {
         parse_mode: "HTML"
     })
     return ctx.wizard.next();
