@@ -21,7 +21,21 @@ const calendar = {
               12 : "December"
             }
 
-var telegramId = -1
+const shortCalendar = {
+  "jan": "January",
+  "feb": "Feburary",
+  "mar": "March",
+  "apr": "April",
+  "may": "May",
+  "jun": "June",
+  "jul": "July",
+  "aug": "August",
+  "sep": "September",
+  "oct": "October",
+  "nov": "November",
+  "dec": "December"
+}
+
 
 function capitalize(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
@@ -58,6 +72,9 @@ async function getMontlyExpenseReport(telegramId) {
                   options: {
                     plugins: {
                       datalabels: {
+                        formatter: (value) => {
+                          return value + '%'
+                        },
                         display: true,
                         backgroundColor: '#ccc',
                         borderRadius: 3,
@@ -97,6 +114,5 @@ exports.occupation = occupation
 exports.budgetAllocation = budgetAllocation
 exports.getMontlyExpenseReport = getMontlyExpenseReport
 exports.answers = answers
-exports.calendar = calendar
-exports.telegramId = telegramId
 exports.capitalize = capitalize
+exports.shortCalendar = shortCalendar
