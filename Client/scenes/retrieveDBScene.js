@@ -2,7 +2,7 @@ const WizardScene = require("telegraf/scenes/wizard");
 const Composer = require("telegraf/composer");
 const axios = require('axios');
 const converter = require('json-2-csv');
-// const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt');
 const fs = require('fs');
 
 const step1 = ctx => {
@@ -19,35 +19,36 @@ step2.on("text", ctx => {
             bcrypt.compare(password, res.data[0].hashedPassword, function(err, result) {
                 if (result == true) {
                     axios.get(`http://localhost:8080/api/allSubscribers`).then(res => {
-                        converter.json2csv(res.data, (err, csv) => {
+                        converter.json2csv(res.data, async (err, csv) => {
                             if (err) {
                                 throw err;
                             }
-                            fs.writeFileSync('Subscribers.csv', csv);
+                            await fs.writeFileSync('Subscribers.csv', csv);
                         });
                         axios.get(`http://localhost:8080/api/allExpenses`).then(res => {
-                            converter.json2csv(res.data, (err, csv) => {
+                            converter.json2csv(res.data, async (err, csv) => {
                                 if (err) {
                                     throw err;
                                 }
-                                fs.writeFileSync('Expenses.csv', csv);
+                                await fs.writeFileSync('Expenses.csv', csv);
+                                ctx.replyWithMediaGroup([
+                                    {
+                                        type: 'document',
+                                        media: {
+                                            source: 'Subscribers.csv'
+                                        }
+    
+                                    },
+                                    {
+                                        type: 'document',
+                                        media: {
+                                            source: 'Expenses.csv'
+                                        }
+    
+                                    }
+                                ])
                             });
-                            ctx.replyWithMediaGroup([
-                                {
-                                    type: 'document',
-                                    media: {
-                                        source: 'Subscribers.csv'
-                                    }
-
-                                },
-                                {
-                                    type: 'document',
-                                    media: {
-                                        source: 'Expenses.csv'
-                                    }
-
-                                }
-                            ])
+                            
                             ctx.scene.leave()
                         }).catch(err => {
                             console.log(err)
@@ -57,6 +58,7 @@ step2.on("text", ctx => {
                     })
                 } else{
                     ctx.reply("Wrong passphrase")
+                    ctx.scene.leave()
                 }
             });
         } else {

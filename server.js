@@ -7,36 +7,31 @@ const { nanoid } = require('nanoid')
 const sql = require("./connection")
 const Moment = require('moment-timezone')
 const methods = require("./methods.js");
-const axios = require('axios');
 const cron = require('node-cron')
 const Excel = require('exceljs');
-const Telegraf = require('telegraf')
-const bot = new Telegraf('1939243495:AAFUFsqmT5fxyb6Ds6fvvLvChsRduuqn0Iw');
-
-
+const Telegraf = require('telegraf');
+const bot = new Telegraf(process.env.BOT_TOKEN);
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 cron.schedule('0 12 * * *', async () => {
-    
-    var expense = -1
-    var total = -1 
-    axios.get(`http://localhost:8080/api/getSubscriber/${ctx.from.id}`).then(res => {
-        expense = res.data[0].Expense
-    }).catch (err => {
-        console.log(res)
-    }) 
-    axios.get(`http://localhost:8080/api/getTotalExpense/${ctx.from.id}`).then(res => {
-        total = res.data[0].Total
-        if (total/expense >= 0.8) {
-            bot.telegram.sendMessage(ctx["data"].telegramId, "🚨You have spent 80% of your budget this month! Please practice mindfulness in your expenses!")
+    sql.query(`select * from Subscribers`, 
+    (error, result) => {
+        if(error) throw error;
+        if (result != []) {
+            result.forEach(async user => {
+                const firstNoti = user.FirstNoti == 0 ? false : true
+                const secondNoti = user.SecondNoti == 0 ? false : true
+                if (!(firstNoti && secondNoti) || !secondNoti) {
+                    await checkExpenseLimit(user).then((_) => {
+                        return
+                    }).catch(err => console.log(err))
+                }
+            })
         }
-    }).catch (err => {
-        console.log(err)
-    }) 
-   
+    })
 }, {
     scheduled: true,
     timezone: "Asia/Singapore"
@@ -50,7 +45,13 @@ cron.schedule('0 0 1 * *', () => {
         if(error) throw error;
         if (result.data != []) {
             result.data.forEach(async user => {
-                await sendProgressReport(user).then((_) => {}).catch(err => console.log(err))
+                await sendProgressReport(user).then((_) => {
+                    sql.query(`delete from Expenses where ID = ${user.ID}`, 
+                    (error, result) => {
+                        if(error) throw error;
+                        return
+                    })
+                }).catch(err => console.log(err))
             })
         }
         res.status(200).send()
@@ -63,11 +64,9 @@ cron.schedule('0 0 1 * *', () => {
 );
 
 async function checkExpenseLimit(user) {
-    //cehck for second
     sql.query(`select sum(Expense) as Total from Expenses where ID = ${user.ID}`, 
     (error, result) => {
         if(error) throw error;
-        //check for second
         if (result[0].Total/user.Expense >= 1) {
             sql.query(`update Subscribers set SecondNoti = true where ID = ${user.ID}`, 
             (error, result) => {
@@ -86,24 +85,6 @@ async function checkExpenseLimit(user) {
     })
 }
 
-app.get("/api/test", async (req, res) => {
-    sql.query(`select * from Subscribers`, 
-    (error, result) => {
-        if(error) throw error;
-        if (result != []) {
-            result.forEach(async user => {
-                const firstNoti = user.FirstNoti == 0 ? false : true
-                const secondNoti = user.SecondNoti == 0 ? false : true
-                console.log(firstNoti)
-                console.log(secondNoti)
-                if (!(firstNoti && secondNoti) || !secondNoti) {
-                    await checkExpenseLimit(user).then((_) => {}).catch(err => console.log(err))
-                }
-            })
-        }
-    })
-})
-
 app.post("/api/addNewUser", (req, res) => {
     const id = req.body.id
     const name = req.body.name
@@ -120,16 +101,6 @@ app.post("/api/addNewUser", (req, res) => {
         if(error) throw error;
         res.send('new user record added successfully!')
     })
-})
-
-app.get("/api/getSubscriber/:id", (req, res) => {
-    const id = req.params.id
-    sql.query(`select * from Subscribers where ID = ${id}`, 
-    (error, result) => {
-        if(error) throw error;
-        res.send(result )
-    }
-    )
 })
 
 app.post("/api/addNewExpense", (req, res) => {
@@ -168,28 +139,6 @@ app.get("/api/getCurrentMonthExpense/:id", (req, res) => {
         if(error) throw error;
         res.send(result)
     })
-})
-
-app.get("/api/getTotalExpense/:id", (req, res) => {
-    const id = req.params.id
-    sql.query(`select sum(Expense) as Total from Expenses where ID = ${id}`, 
-    (error, result) => {
-        if(error) throw error;
-        res.send(result)
-    })
-})
-
-app.get("/api/getAllCurrentMonthExpense/:id", (req,res) => {
-    const id = req.params.id
-    const currentTime = Moment().tz('Asia/Singapore')
-    const month = String(currentTime.month() + 1).padStart(2, '0')
-    const year = currentTime.year()
-    sql.query(`select Category, CreatedOn, Expense, Description from Expenses where ID = ${id} AND CreatedOn like '${year}%-${month}%' order by CreatedOn`,
-    (error, result) => {
-        if(error) throw error; 
-        res.send(result)
-    }
-    )
 })
 
 app.post("/api/updateSubscriber/:id", (req,res) => {
@@ -292,6 +241,7 @@ async function sendProgressReport(user) {
         (error, result) => {
             if(error) throw error; 
             if (result != []) {
+                var summaryExpense = ""
                 breakdown.columns = [
                     { header: 'Category', key: 'category' },
                     { header: 'Created On', key: 'created_on' },
@@ -299,6 +249,7 @@ async function sendProgressReport(user) {
                     { header: 'Description', key: 'description' }
                 ];
                 for (const item of result){
+                    summaryExpense += `${item.Category}: $${parseFloat(item.Expense).toFixed(2)}\n`
                     breakdown.addRow(
                         { category: item.Category, created_on: item.CreatedOn, expense:  `$${parseFloat(item.Expense).toFixed(2)}`, description: item.Description},
                     ); 
@@ -307,7 +258,9 @@ async function sendProgressReport(user) {
                 .xlsx
                 .writeFile(`./Records/${user.ID}-${methods.calendar[currentMonth]}-${year}.xlsx`)
                     .then(() =>  {
-                        bot.telegram.sendDocument(user.ID, {source: `./Records/${user.ID}-${methods.calendar[currentMonth]}-${year}.xlsx`}, {caption: `This is your expense report for the month of ${methods.calendar[currentMonth]}.`}).then((_) => {
+                        var summary = ""
+
+                        bot.telegram.sendDocument(user.ID, {source: `./Records/${user.ID}-${methods.calendar[currentMonth]}-${year}.xlsx`}, {caption: `Attached is your expense report for the month of ${methods.calendar[currentMonth]}.\n\n${summaryExpense}`}).then((_) => {
                             sql.query(`update Subscribers set FirstNoti = false, SecondNoti = false where ID = ${user.ID}`,
                             (error, result) => {
                                 if(error) throw error;

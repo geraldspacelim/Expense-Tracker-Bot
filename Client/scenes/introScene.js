@@ -54,7 +54,8 @@ step3.on("text", ctx => {
                 [
                     {text: "Unemployed"}
                 ]
-            ]
+            ],
+            one_time_keyboard: true,
         }
     })
     return ctx.wizard.next();
@@ -93,11 +94,6 @@ step5.on("text", ctx => {
     ctx.wizard.state.data.retirement = (0.2*salary).toFixed(2)
     ctx.wizard.state.data.insurance = (0.1*salary).toFixed(2)  
     ctx.wizard.state.data.salary =  salary
-    ctx["data"].savings = (0.4*salary).toFixed(2)
-    ctx["data"].expense = (0.3*salary).toFixed(2)
-    ctx["data"].retirement = (0.2*salary).toFixed(2)
-    ctx["data"].insurance = (0.1*salary).toFixed(2)  
-    ctx["data"].salary = salary
     axios.post('http://localhost:8080/api/addNewUser', ctx.wizard.state.data).then(function (res){
         ctx.replyWithPhoto({
             source: "./assets/image.jpg"
@@ -112,7 +108,8 @@ step5.on("text", ctx => {
                         [
                             {text: "No"}
                         ],
-                    ]
+                    ],
+                    one_time_keyboard: true,
                 }
             }
         )
@@ -150,7 +147,8 @@ step6.on("text", ctx => {
                     [
                         {text: "Insurance"}
                     ],
-                ]
+                ],
+                one_time_keyboard: true,
             }
         })
         return ctx.wizard.next();
@@ -217,7 +215,8 @@ step8.on("text", ctx => {
                 [
                     {text: "No", callback_data: "No"}
                 ],
-            ]
+            ],
+            one_time_keyboard: true,
         }
     })
     return ctx.wizard.next();
@@ -251,7 +250,8 @@ step9.on("text", ctx => {
                     [
                         {text: "Insurance"}
                     ],
-                ]
+                ],
+                one_time_keyboard: true,
             }
         })
         return ctx.wizard.selectStep(6);

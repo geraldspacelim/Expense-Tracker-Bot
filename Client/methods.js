@@ -43,7 +43,6 @@ function capitalize(string) {
 
 
 async function getMontlyExpenseReport(telegramId) {
-  console.log(telegramId)
     try {
         const res = await axios.get(`http://localhost:8080/api/getCurrentMonthExpense/${telegramId}`);
         if (res.data != []) {
@@ -56,6 +55,7 @@ async function getMontlyExpenseReport(telegramId) {
               data.push(expenseValue)
               total += expenseValue
             }
+            var percent_data = data.map(expense => (expense / total * 100).toFixed(1))
             const currentTime = Moment().tz('Asia/Singapore')
             const month = String(currentTime.month() + 1).padStart(2, '0')
             const myChart = new QuickChart();
@@ -66,7 +66,7 @@ async function getMontlyExpenseReport(telegramId) {
                   data: {
                     labels: labels,
                     datasets: [{
-                      data: data
+                      data: percent_data
                     }]
                   },
                   options: {
