@@ -10,7 +10,7 @@ const step1 = ctx => {
     const telegramId = ctx.from.id
     ctx.wizard.state.data.id = telegramId
     ctx.wizard.state.data.username = ctx.from.username
-    ctx.reply ("Hello! Congrats for taking the first step to get <b>AAHEADSTART</b> in Adulting!🎉 I’m your friendly expense tracking bot. Before we get started, I’d like tgio get to know you a little better. What is your name?\n\n<i>By using this service, you agree to the <a href='https://www.aia.com.sg/en/campaigns-promotions/aia-star-protector-plus-offer-2018/marketing-consent.html'>terms and conditions</a> governing your use of @AAheadstart_bot online service.</i>", {
+    ctx.reply ("Hello! Congrats for taking the first step to get <b>AAHEADSTART</b> in Adulting!🎉 I’m your friendly expense tracking bot. Before we get started, I’d like to get to know you a little better. <b>What is your name?</b>\n\n<i>By using this service, you agree to the <a href='https://www.aia.com.sg/en/campaigns-promotions/aia-star-protector-plus-offer-2018/marketing-consent.html'>terms and conditions</a> governing your use of @AAheadstart_bot online service.</i>", {
         parse_mode: "HTML"
     })
     return ctx.wizard.next();
@@ -36,7 +36,7 @@ step3.on("text", ctx => {
         return ctx.wizard.selectStep(currentStepIndex);
     }
     ctx.wizard.state.data.dob = ctx.message.text
-    ctx.reply("Which category do you fall under? Polytechnic, University, Fresh Graduate, Employed, Unemployed", {
+    ctx.reply("Which category do you fall under?", {
         reply_markup: {
             keyboard: [
                 [
@@ -99,7 +99,8 @@ step5.on("text", ctx => {
             source: "./assets/image.jpg"
         },
             {
-                caption: "Recommended allocation for: \n40% Cash Savings & Loans: $" + ctx.wizard.state.data.savings + "\n30% Expenses: $" + ctx.wizard.state.data.expense  + "\n20% Retirement Planning: $" + ctx.wizard.state.data.retirement + "\n10% Insurance: $" + ctx.wizard.state.data.insurance + "\n\nYour goal is to keep your monthly expenses below $" + ctx.wizard.state.data.expense + ". I will be there with you every step of the way! Good luck! 👍🏻 \n\nWould you like to amend the allocated budget for any of the categories above?",
+                caption: "Recommended allocation for: \n40% Cash Savings & Loans: $" + ctx.wizard.state.data.savings + "\n30% Expenses: $" + ctx.wizard.state.data.expense  + "\n20% Retirement Planning: $" + ctx.wizard.state.data.retirement + "\n10% Insurance: $" + ctx.wizard.state.data.insurance + "\n\nYour goal is to keep your monthly expenses below $" + ctx.wizard.state.data.expense + ". I will be there with you every step of the way! Good luck! 👍🏻 \n\n<b>Would you like to amend the allocated budget for any of the categories above?</b>",
+                parse_mode: "HTML",
                 reply_markup: {
                     keyboard: [
                         [
@@ -110,7 +111,7 @@ step5.on("text", ctx => {
                         ],
                     ],
                     one_time_keyboard: true,
-                }
+                },
             }
         )
         return ctx.wizard.next();
@@ -154,7 +155,7 @@ step6.on("text", ctx => {
         return ctx.wizard.next();
     }
     else {
-        const endConvo = `Your goal is to keep your monthly expenses below $${ctx.wizard.state.data.expense}. I will be there with you every step of the way! Good luck! 👍🏻`
+        const endConvo = `Your goal is to keep your monthly expenses below $${ctx.wizard.state.data.expense}. I will be there with you every step of the way! Good luck! 👍🏻 \n\nTo start tracking your expesnes, press /expense.`
         ctx.reply(endConvo)
         return ctx.scene.leave()
     }

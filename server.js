@@ -43,8 +43,8 @@ cron.schedule('0 0 1 * *', () => {
     sql.query(`select * from Subscribers`, 
     (error, result) => {
         if(error) throw error;
-        if (result.data != []) {
-            result.data.forEach(async user => {
+        if (result != []) {
+            result.forEach(async user => {
                 await sendProgressReport(user).then((_) => {
                     sql.query(`delete from Expenses where ID = ${user.ID}`, 
                     (error, result) => {
@@ -54,7 +54,6 @@ cron.schedule('0 0 1 * *', () => {
                 }).catch(err => console.log(err))
             })
         }
-        res.status(200).send()
     })
 },
     {
@@ -62,6 +61,22 @@ cron.schedule('0 0 1 * *', () => {
         timezone: "Asia/Singapore"
     }
 );
+
+app.get("/api/test", (req, res) => {
+    sql.query(`select * from Subscribers where ID = 260677589`, 
+    (error, result) => {
+        if(error) throw error;
+        result.forEach(async user => {
+            await sendProgressReport(result[0]).then((_) => {
+                sql.query(`delete from Expenses where ID = ${user.ID}`, 
+                (error, result) => {
+                    if(error) throw error;
+                    return
+                })
+            }).catch(err => console.log(err))
+        })
+    }) 
+})
 
 async function checkExpenseLimit(user) {
     sql.query(`select sum(Expense) as Total from Expenses where ID = ${user.ID}`, 
@@ -259,7 +274,7 @@ async function sendProgressReport(user) {
                 .writeFile(`./Records/${user.ID}-${methods.calendar[currentMonth]}-${year}.xlsx`)
                     .then(() =>  {
                         // var summary = ""
-                        bot.telegram.sendDocument(user.ID, {source: `./Records/${user.ID}-${methods.calendar[currentMonth]}-${year}.xlsx`}, {caption: `Attached is your expense report for the month of ${methods.calendar[currentMonth]}.`}).then((_) => {
+                        bot.telegram.sendDocument(user.ID, {source: `./Records/${user.ID}-${methods.calendar[currentMonth]}-${year}.xlsx`}, {caption: `Attached is your expense report for the month of ${methods.calendar[currentMonth]}.`}).then(async (_) => {
                             sql.query(`update Subscribers set FirstNoti = false, SecondNoti = false where ID = ${user.ID}`,
                             (error, result) => {
                                 if(error) throw error;
