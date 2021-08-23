@@ -90,7 +90,7 @@ async function getMontlyExpenseReport(telegramId) {
                             weight: 'bold'
                           }
                         }, {
-                          text: 'total'
+                          text: 'Total'
                         }]
                       }
                     }

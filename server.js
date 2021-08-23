@@ -45,13 +45,7 @@ cron.schedule('0 0 1 * *', () => {
         if(error) throw error;
         if (result != []) {
             result.forEach(async user => {
-                await sendProgressReport(user).then((_) => {
-                    sql.query(`delete from Expenses where ID = ${user.ID}`, 
-                    (error, result) => {
-                        if(error) throw error;
-                        return
-                    })
-                }).catch(err => console.log(err))
+                await sendProgressReport(user).then((_) => {return}).catch(err => console.log(err))
             })
         }
     })
@@ -62,21 +56,17 @@ cron.schedule('0 0 1 * *', () => {
     }
 );
 
-app.get("/api/test", (req, res) => {
-    sql.query(`select * from Subscribers where ID = 260677589`, 
-    (error, result) => {
-        if(error) throw error;
-        result.forEach(async user => {
-            await sendProgressReport(result[0]).then((_) => {
-                sql.query(`delete from Expenses where ID = ${user.ID}`, 
-                (error, result) => {
-                    if(error) throw error;
-                    return
-                })
-            }).catch(err => console.log(err))
-        })
-    }) 
-})
+// app.get("/api/test", (req, res) => {
+//     sql.query(`select * from Subscribers where ID = 260677589`, 
+//     (error, result) => {
+//         if(error) throw error;
+//         result.forEach(async user => {
+//             sendProgressReport(user).then((_) => {return}).catch(err => {
+//                 console.log(err)
+//             })
+//         })
+//     }) 
+// })
 
 async function checkExpenseLimit(user) {
     sql.query(`select sum(Expense) as Total from Expenses where ID = ${user.ID}`, 
@@ -226,6 +216,7 @@ async function sendProgressReport(user) {
     (error, result) => {
         if(error) throw error;
         if (result != []) {
+           
             summary.columns = [
                 {key: 'category', width: 20},
                 {key: 'total_expense', width: 10}
@@ -237,7 +228,6 @@ async function sendProgressReport(user) {
                 bold: true
             }
             var totalExpenses = 0
-
             for (const category of result){
                 totalExpenses += category.Total
                 summary.addRow(
@@ -253,10 +243,9 @@ async function sendProgressReport(user) {
             bottom: {style:'double'}
         }
         sql.query(`select Category, CreatedOn, Expense, Description from Expenses where ID = ${user.ID} AND CreatedOn like '${year}%-${month}%' order by CreatedOn`,
-        (error, result) => {
+        async (error, result) => {
             if(error) throw error; 
             if (result != []) {
-                // var summaryExpense = ""
                 breakdown.columns = [
                     { header: 'Category', key: 'category' },
                     { header: 'Created On', key: 'created_on' },
@@ -264,7 +253,6 @@ async function sendProgressReport(user) {
                     { header: 'Description', key: 'description' }
                 ];
                 for (const item of result){
-                    // summaryExpense += `${item.Category}: $${parseFloat(item.Expense).toFixed(2)}\n`
                     breakdown.addRow(
                         { category: item.Category, created_on: item.CreatedOn, expense:  `$${parseFloat(item.Expense).toFixed(2)}`, description: item.Description},
                     ); 
@@ -273,13 +261,18 @@ async function sendProgressReport(user) {
                 .xlsx
                 .writeFile(`./Records/${user.ID}-${methods.calendar[currentMonth]}-${year}.xlsx`)
                     .then(() =>  {
-                        // var summary = ""
-                        bot.telegram.sendDocument(user.ID, {source: `./Records/${user.ID}-${methods.calendar[currentMonth]}-${year}.xlsx`}, {caption: `Attached is your expense report for the month of ${methods.calendar[currentMonth]}.`}).then(async (_) => {
-                            sql.query(`update Subscribers set FirstNoti = false, SecondNoti = false where ID = ${user.ID}`,
-                            (error, result) => {
-                                if(error) throw error;
-                                return 
-                            })
+                        sql.query(`delete from Expenses where ID = ${user.ID}`, 
+                        (error, result) => {
+                            if(error) throw error;
+                            if (result != []) {
+                                sql.query(`update Subscribers set FirstNoti = false, SecondNoti = false where ID = ${user.ID}`,
+                                (error, result) => {
+                                    if(error) throw error;
+                                    if (result != []) {
+                                        bot.telegram.sendDocument(user.ID, {source: `./Records/${user.ID}-${methods.calendar[currentMonth]}-${year}.xlsx`}, {caption: `Attached is your expense report for the month of ${methods.calendar[currentMonth]}.`})
+                                    }
+                                })
+                            }     
                         })
                     })
                 .catch((err) => {
