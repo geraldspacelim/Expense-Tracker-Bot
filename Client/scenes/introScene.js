@@ -258,10 +258,10 @@ step9.on("text", ctx => {
     } else {
         axios.post(`http://localhost:8080/api/updateSubscriber/${ctx.from.id}`, ctx.wizard.state.data).then(res => {
             if(res.status == 200) {
-                var endConvo = `Your goal is to keep your monthly expenses below $${ctx.wizard.state.data.expense}. I will be there with you every step of the way! Good luck! 👍🏻`
+                var endConvo = `Your goal is to keep your monthly expenses below $${ctx.wizard.state.data.expense}. I will be there with you every step of the way! Good luck! 👍🏻\n\nTo start tracking your expesnes, press /expense.`
             if (ctx.wizard.state.data.isAmend) {
                 const updatedBudgetAllocation = `This is your updated customized allocation:\nCash Savings & Loans: $${ctx.wizard.state.data.savings} \nExpenses: $${ctx.wizard.state.data.expense}\nRetirement Planning: $${ctx.wizard.state.data.retirement}\nInsurance: $${ctx.wizard.state.data.insurance}`
-                endConvo = updatedBudgetAllocation + "\n\n" + endConvo
+                endConvo = updatedBudgetAllocation + "\n\n" + endConvo + "\n\nTo start tracking your expesnes, press /expense."
             }
             ctx.reply(endConvo)
             return ctx.scene.leave()

@@ -33,7 +33,11 @@ bot.command('pastreports', ctx => {
 })
 bot.command('report', async ctx  => {
     await methods.getMontlyExpenseReport(ctx.from.id).then(res => {
-        var caption = `This is your monthly expenses for ${res.month}.`
+        var expenseMessage = ""
+        for (const expense in res.expenses) {
+            expenseMessage += `${expense}: $${res.expenses[expense].toFixed(2)}`
+        }
+        var caption = `This is your monthly expenses for ${res.month}.B\n\nreakdown of expenses is as follow:\n${expenseMessage}`
         ctx.replyWithPhoto(res.url, {
             caption: caption
         })

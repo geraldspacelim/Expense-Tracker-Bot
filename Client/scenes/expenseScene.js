@@ -137,12 +137,12 @@ step5.on("text", ctx => {
             })
         }
         
-        return ctx.scene.leave()
+       
     }).catch(function (error) {
         console.log(error)
     }) 
     }
-    
+    return ctx.scene.leave()
 })
 
 

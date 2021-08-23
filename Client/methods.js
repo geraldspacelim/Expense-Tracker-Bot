@@ -101,6 +101,7 @@ async function getMontlyExpenseReport(telegramId) {
             return ({
               url: myChart.getUrl(),
               month:  calendar[parseInt(month)],
+              expenses: res.data
             })
         }
       } catch (error) {

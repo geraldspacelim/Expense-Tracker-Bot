@@ -241,7 +241,7 @@ async function sendProgressReport(user) {
         (error, result) => {
             if(error) throw error; 
             if (result != []) {
-                var summaryExpense = ""
+                // var summaryExpense = ""
                 breakdown.columns = [
                     { header: 'Category', key: 'category' },
                     { header: 'Created On', key: 'created_on' },
@@ -249,7 +249,7 @@ async function sendProgressReport(user) {
                     { header: 'Description', key: 'description' }
                 ];
                 for (const item of result){
-                    summaryExpense += `${item.Category}: $${parseFloat(item.Expense).toFixed(2)}\n`
+                    // summaryExpense += `${item.Category}: $${parseFloat(item.Expense).toFixed(2)}\n`
                     breakdown.addRow(
                         { category: item.Category, created_on: item.CreatedOn, expense:  `$${parseFloat(item.Expense).toFixed(2)}`, description: item.Description},
                     ); 
@@ -258,9 +258,8 @@ async function sendProgressReport(user) {
                 .xlsx
                 .writeFile(`./Records/${user.ID}-${methods.calendar[currentMonth]}-${year}.xlsx`)
                     .then(() =>  {
-                        var summary = ""
-
-                        bot.telegram.sendDocument(user.ID, {source: `./Records/${user.ID}-${methods.calendar[currentMonth]}-${year}.xlsx`}, {caption: `Attached is your expense report for the month of ${methods.calendar[currentMonth]}.\n\n${summaryExpense}`}).then((_) => {
+                        // var summary = ""
+                        bot.telegram.sendDocument(user.ID, {source: `./Records/${user.ID}-${methods.calendar[currentMonth]}-${year}.xlsx`}, {caption: `Attached is your expense report for the month of ${methods.calendar[currentMonth]}.`}).then((_) => {
                             sql.query(`update Subscribers set FirstNoti = false, SecondNoti = false where ID = ${user.ID}`,
                             (error, result) => {
                                 if(error) throw error;
