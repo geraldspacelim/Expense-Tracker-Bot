@@ -103,7 +103,7 @@ step5.on("text", ctx => {
         ctx.wizard.state.data.uuid = uuid
         axios.post('http://localhost:8080/api/updateExpense', ctx.wizard.state.data).then(function (res) {
             if(res.status == 200) {
-                expenseText += `Category: ${expense.category}\nExpense: ${expense.expense}`
+                expenseText += `Category: ${expense.category}\nExpense: $${methods.numberWithCommas(expense.expense)}`
             if (expense.description != "")  {
                 expenseText += `\nDescription: ${expense.description}`
             }  
@@ -122,7 +122,7 @@ step5.on("text", ctx => {
     } else {    
         axios.post('http://localhost:8080/api/addNewExpense', expense).then(function (res){
         if (res.status == 200) {
-            expenseText += `Category: ${expense.category}\nExpense: ${expense.expense}`
+            expenseText += `Category: ${expense.category}\nExpense: $${methods.numberWithCommas(expense.expense)}`
             if (expense.description != "")  {
                 expenseText += `\nDescription: ${expense.description}`
             }         

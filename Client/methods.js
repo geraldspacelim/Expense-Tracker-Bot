@@ -6,6 +6,7 @@ const category = ["Work Food", "Good Food", "Coffee", "Alcohol", "Necessities", 
 const occupation = ["Polytechnic", "University", "Fresh Graduate", "Employed", "Unemployed"]
 const budgetAllocation = ["Cash Savings & Loans", "Expenses", "Retirement Planning", "Insurance"]
 const answers = ["Yes", "No"]
+const particulars = ["Name", "DOB", "Occupation", "Monthly Income or Allowance"]
 const calendar = {
               1 : "January",
               2 : "Feburary",
@@ -109,6 +110,9 @@ async function getMontlyExpenseReport(telegramId) {
       }
 }
 
+function numberWithCommas(number) {
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
 
 exports.category = category
 exports.occupation = occupation
@@ -117,3 +121,5 @@ exports.getMontlyExpenseReport = getMontlyExpenseReport
 exports.answers = answers
 exports.capitalize = capitalize
 exports.shortCalendar = shortCalendar
+exports.particulars = particulars
+exports.numberWithCommas = numberWithCommas

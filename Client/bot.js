@@ -6,20 +6,25 @@ const session = require("telegraf/session");
 const introScene = require("./scenes/introScene").introScene
 const expenseScene = require("./scenes/expenseScene").expenseScene
 const retrieveDBScene = require("./scenes/retrieveDBScene").retrieveDBScene
-const methods = require("./methods.js"); 
+const amendScene = require("./scenes/amendScene").amendScene
+const methods = require("./methods.js");
 
-const stage = new Stage([introScene, expenseScene, retrieveDBScene], {default: 'introScene '})
+//amend budget
+
+const stage = new Stage([introScene, expenseScene, retrieveDBScene, amendScene], {default: 'introScene '})
 bot.use(session())
 bot.use(stage.middleware())
 bot.start(ctx => ctx.scene.enter("introScene"))
+bot.command('amendparticulars', ctx => ctx.scene.enter('amendScene'))
+bot.command('amendbudget', ctx => ctx.scene.enter("introScene", {amendBudget: true}))
 bot.command('expense', ctx => ctx.scene.enter("expenseScene", {edit: false}))
 bot.command('download', ctx => ctx.scene.enter("retrieveDBScene"))
 bot.on("callback_query", ctx => ctx.scene.enter("expenseScene", {edit: true, callback_data: ctx}))
-bot.command('pastreports', ctx => {
+bot.command('previousreport', ctx => {
     var query = ctx.update.message.text.split(" ")[1]
     const qRegex = new RegExp(/^\w\w\w-\d\d\d\d/);
     if (!qRegex.test(query)) {
-        ctx.reply("Format incorrect. Please try again like this e.g. Aug-2021")
+        ctx.reply("To retrieve past reports, please enter in the following format (MMM-YYYY)")
         return
     }
     const query_split = query.split("-")
@@ -47,3 +52,5 @@ bot.command('report', async ctx  => {
 })
 
 bot.launch()
+process.once('SIGINT', () => bot.stop('SIGINT'))
+process.once('SIGTERM', () => bot.stop('SIGTERM'))

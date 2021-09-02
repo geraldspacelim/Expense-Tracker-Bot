@@ -108,6 +108,15 @@ app.post("/api/addNewUser", (req, res) => {
     })
 })
 
+app.get("/api/getSubscriber/:id", (req, res) => {
+    const id = req.params.id
+    sql.query(`select * from Subscribers where ID = ${id}`, 
+    (error, result) => {
+        if (error) throw error;
+        res.send(result)
+    })
+})
+
 app.post("/api/addNewExpense", (req, res) => {
     const uuid = nanoid()
     const id = req.body.id
@@ -158,6 +167,17 @@ app.post("/api/updateSubscriber/:id", (req,res) => {
         res.status(200).send()
     }
     )
+})
+
+app.post("/api/updateParticulars/:id", (req,res) => {
+    const id = req.params.id 
+    const category = req.body.category
+    const value = req.body.value
+    sql.query(`update Subscribers set ${category} = '${value}' where ID = ${id}`, 
+    (error, result) => {
+        if (error) throw error;
+        res.status(200).send()
+    })
 })
 
 app.get("/api/authenticate/:id", (req, res) => {
@@ -254,7 +274,7 @@ async function sendProgressReport(user) {
                 ];
                 for (const item of result){
                     breakdown.addRow(
-                        { category: item.Category, created_on: item.CreatedOn, expense:  `$${parseFloat(item.Expense).toFixed(2)}`, description: item.Description},
+                        { category: item.Category, created_on: item.CreatedOn, expense:  `$${methods.numberWithCommas(parseFloat(item.Expense).toFixed(2))}`, description: item.Description},
                     ); 
                 }
                 workbook

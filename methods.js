@@ -13,4 +13,9 @@ const calendar = {
     12 : "December"
 }
 
+function numberWithCommas(number) {
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+  
 exports.calendar = calendar
+exports.numberWithCommas = numberWithCommas

@@ -7,6 +7,37 @@ const fs = require("fs");
 
 const step1 = ctx => {
     ctx.wizard.state.data = {};
+    if (ctx.wizard.state.amendBudget) {
+        axios.get(`http://localhost:8080/api/getSubscriber/${ctx.from.id}`).then(res => {
+            if (res.data) {
+                ctx.wizard.state.data.savings = res.data[0].Savings.toFixed(2)
+                ctx.wizard.state.data.expense =  res.data[0].Expense.toFixed(2)
+                ctx.wizard.state.data.retirement =  res.data[0].Retirement.toFixed(2)
+                ctx.wizard.state.data.insurance =  res.data[0].Insurance.toFixed(2)
+                ctx.wizard.state.data.salary =   res.data[0].Salary.toFixed(2)
+            }
+        })
+        ctx.reply("Which category, would you like to amend?", {
+            reply_markup: {
+                keyboard: [
+                    [
+                        {text: "Cash Savings & Loans"}
+                    ],
+                    [
+                        {text: "Expenses"}
+                    ],
+                    [
+                        {text: "Retirement Planning"}
+                    ],
+                    [
+                        {text: "Insurance"}
+                    ],
+                ],
+                one_time_keyboard: true,
+            }
+        })
+        return ctx.wizard.selectStep(6);
+    } 
     const telegramId = ctx.from.id
     ctx.wizard.state.data.id = telegramId
     ctx.wizard.state.data.username = ctx.from.username
@@ -99,7 +130,7 @@ step5.on("text", ctx => {
             source: "./assets/image.jpg"
         },
             {
-                caption: "Recommended allocation for: \n40% Cash Savings & Loans: $" + ctx.wizard.state.data.savings + "\n30% Expenses: $" + ctx.wizard.state.data.expense  + "\n20% Retirement Planning: $" + ctx.wizard.state.data.retirement + "\n10% Insurance: $" + ctx.wizard.state.data.insurance + "\n\nYour goal is to keep your monthly expenses below $" + ctx.wizard.state.data.expense + ". I will be there with you every step of the way! Good luck! 👍🏻 \n\n<b>Would you like to amend the allocated budget for any of the categories above?</b>",
+                caption: "Recommended allocation for: \n40% Cash Savings & Loans: $" + methods.numberWithCommas(ctx.wizard.state.data.savings) + "\n30% Expenses: $" + methods.numberWithCommas(ctx.wizard.state.data.expense)  + "\n20% Retirement Planning: $" + methods.numberWithCommas(ctx.wizard.state.data.retirement) + "\n10% Insurance: $" + methods.numberWithCommas(ctx.wizard.state.data.insurance) + "\n\nYour goal is to keep your monthly expenses below $" + methods.numberWithCommas(ctx.wizard.state.data.expense) + ". I will be there with you every step of the way! Good luck! 👍🏻 \n\n<b>Would you like to amend the allocated budget for any of the categories above?</b>",
                 parse_mode: "HTML",
                 reply_markup: {
                     keyboard: [
@@ -155,7 +186,7 @@ step6.on("text", ctx => {
         return ctx.wizard.next();
     }
     else {
-        const endConvo = `Your goal is to keep your monthly expenses below $${ctx.wizard.state.data.expense}. I will be there with you every step of the way! Good luck! 👍🏻 \n\nTo start tracking your expesnes, press /expense.`
+        const endConvo = `Your goal is to keep your monthly expenses below $${methods.numberWithCommas(ctx.wizard.state.data.expense)}. I will be there with you every step of the way! Good luck! 👍🏻 \n\nTo start tracking your expesnes, press /expense.`
         ctx.reply(endConvo)
         return ctx.scene.leave()
     }
@@ -259,10 +290,10 @@ step9.on("text", ctx => {
     } else {
         axios.post(`http://localhost:8080/api/updateSubscriber/${ctx.from.id}`, ctx.wizard.state.data).then(res => {
             if(res.status == 200) {
-                var endConvo = `Your goal is to keep your monthly expenses below $${ctx.wizard.state.data.expense}. I will be there with you every step of the way! Good luck! 👍🏻\n\nTo start tracking your expesnes, press /expense.`
+                var endConvo = `Your goal is to keep your monthly expenses below $${methods.numberWithCommas(ctx.wizard.state.data.expense)}. I will be there with you every step of the way! Good luck! 👍🏻\n\nTo start tracking your expesnes, press /expense.`
             if (ctx.wizard.state.data.isAmend) {
-                const updatedBudgetAllocation = `This is your updated customized allocation:\nCash Savings & Loans: $${ctx.wizard.state.data.savings} \nExpenses: $${ctx.wizard.state.data.expense}\nRetirement Planning: $${ctx.wizard.state.data.retirement}\nInsurance: $${ctx.wizard.state.data.insurance}`
-                endConvo = updatedBudgetAllocation + "\n\n" + endConvo + "\n\nTo start tracking your expesnes, press /expense."
+                const updatedBudgetAllocation = `This is your updated customized allocation:\nCash Savings & Loans: $${methods.numberWithCommas(ctx.wizard.state.data.savings)} \nExpenses: $${methods.numberWithCommas(ctx.wizard.state.data.expense)}\nRetirement Planning: $${methods.numberWithCommas(ctx.wizard.state.data.retirement)}\nInsurance: $${methods.numberWithCommas(ctx.wizard.state.data.insurance)}`
+                endConvo = updatedBudgetAllocation + "\n\n" + endConvo
             }
             ctx.reply(endConvo)
             return ctx.scene.leave()
