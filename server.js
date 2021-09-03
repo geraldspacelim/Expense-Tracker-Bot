@@ -93,6 +93,7 @@ async function checkExpenseLimit(user) {
 app.post("/api/addNewUser", (req, res) => {
     const id = req.body.id
     const name = req.body.name
+    const contact = req.body.contact
     const dob = req.body.dob
     const occupation = req.body.occupation
     const salary = req.body.salary
@@ -101,7 +102,7 @@ app.post("/api/addNewUser", (req, res) => {
     const retirement = req.body.retirement
     const insurance = req.body.insurance
     const username = req.body.username  
-    sql.query(`insert into Subscribers values (${id}, '${name}', '${dob}', '${occupation}', ${salary}, ${savings}, ${expense}, ${retirement}, ${insurance}, '${username}', false, false) on duplicate key update Username = '${name}', Dob = '${dob}', Occupation = '${occupation}', Salary = ${salary}, TelegramId = '${username}'`, 
+    sql.query(`insert into Subscribers values (${id}, '${name}',  ${contact}, '${dob}', '${occupation}', ${salary}, ${savings}, ${expense}, ${retirement}, ${insurance}, '${username}', false, false) on duplicate key update Username = '${name}', Contact = ${contact}, Dob = '${dob}', Occupation = '${occupation}', Salary = ${salary}, Savings = ${savings}, Expense = ${expense}, Retirement = ${retirement}, Insurance = ${insurance}, TelegramId = '${username}'`, 
     (error, result) => {
         if(error) throw error;
         res.send('new user record added successfully!')

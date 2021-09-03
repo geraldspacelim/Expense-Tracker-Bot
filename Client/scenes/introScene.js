@@ -41,7 +41,7 @@ const step1 = ctx => {
     const telegramId = ctx.from.id
     ctx.wizard.state.data.id = telegramId
     ctx.wizard.state.data.username = ctx.from.username
-    ctx.reply ("Hello! Congrats for taking the first step to get <b>AAHEADSTART</b> in Adulting!🎉 I’m your friendly expense tracking bot. Before we get started, I’d like to get to know you a little better. <b>What is your name?</b>\n\n<i>By using this service, you agree to the <a href='https://www.aia.com.sg/en/campaigns-promotions/aia-star-protector-plus-offer-2018/marketing-consent.html'>terms and conditions</a> governing your use of @AAheadstart_bot online service.</i>", {
+    ctx.reply ("Hello! Congrats for taking the first step to get <b>AAHEADSTART</b> in Adulting!🎉 I’m your friendly expense tracking bot. Before we get started, I’d like to get to know you a little better. <b>What is your name?</b>\n\n<i>By using this service, you agree to the <a href='https://tinyurl.com/AAHEADSTARTMarketingConsent'>terms and conditions</a> governing your use of @AAheadstart_bot online service.</i>", {
         parse_mode: "HTML"
     })
     return ctx.wizard.next();
@@ -51,13 +51,30 @@ const step2 = new Composer();
 
 step2.on("text", ctx => {
     ctx.wizard.state.data.name = ctx.message.text
+    ctx.reply("What is your contact number?")
+    return ctx.wizard.next();
+})
+
+
+const step3 = new Composer();
+
+step3.on("text", ctx => {
+    var contactRegex = new RegExp(/^\d{8}$/);
+    if (!contactRegex.test(ctx.message.text)) {
+        const currentStepIndex = ctx.wizard.cursor;
+        ctx.reply(
+          "Please enter a valid contact number."
+        );
+        return ctx.wizard.selectStep(currentStepIndex);
+    }
+    ctx.wizard.state.data.contact = ctx.message.text
     ctx.reply("What is your date of birth? (DD-MM-YYYY)")
     return ctx.wizard.next();
 })
 
-const step3 = new Composer() 
+const step4 = new Composer() 
 
-step3.on("text", ctx => {
+step4.on("text", ctx => {
     var dtRegex = new RegExp(/^\d\d?-\w\w\-\d\d\d\d/);
     if (!dtRegex.test(ctx.message.text)) {
         const currentStepIndex = ctx.wizard.cursor;
@@ -92,9 +109,9 @@ step3.on("text", ctx => {
     return ctx.wizard.next();
 })
 
-const step4 = new Composer()
+const step5 = new Composer()
 
-step4.on('text', ctx => {
+step5.on('text', ctx => {
     const occupation = ctx.update.message.text
     if (!methods.occupation.includes(occupation)) {
         const currentStepIndex = ctx.wizard.cursor;
@@ -109,9 +126,9 @@ step4.on('text', ctx => {
 })
 
 
-const step5 = new Composer()
+const step6 = new Composer()
 
-step5.on("text", ctx => {
+step6.on("text", ctx => {
     if (isNaN(ctx.message.text)) {
         const currentStepIndex = ctx.wizard.cursor;
         ctx.reply(
@@ -130,7 +147,7 @@ step5.on("text", ctx => {
             source: "./assets/image.jpg"
         },
             {
-                caption: "Recommended allocation for: \n40% Cash Savings & Loans: $" + methods.numberWithCommas(ctx.wizard.state.data.savings) + "\n30% Expenses: $" + methods.numberWithCommas(ctx.wizard.state.data.expense)  + "\n20% Retirement Planning: $" + methods.numberWithCommas(ctx.wizard.state.data.retirement) + "\n10% Insurance: $" + methods.numberWithCommas(ctx.wizard.state.data.insurance) + "\n\nYour goal is to keep your monthly expenses below $" + methods.numberWithCommas(ctx.wizard.state.data.expense) + ". I will be there with you every step of the way! Good luck! 👍🏻 \n\n<b>Would you like to amend the allocated budget for any of the categories above?</b>",
+                caption: "Image Source: <a href='https://scontent.fsin7-1.fna.fbcdn.net/v/t1.18169-9/14292520_10154329102140923_4984613453475846191_n.png?_nc_cat=105&ccb=1-5&_nc_sid=9267fe&_nc_ohc=AsugukCJGLsAX9-3f0O&_nc_ht=scontent.fsin7-1.fna&oh=a105cd7c5a8d707760be083b3779e93c&oe=61491714'>CPF</a>\n\nRecommended allocation for: \n40% Cash Savings & Loans: $" + methods.numberWithCommas(ctx.wizard.state.data.savings) + "\n30% Expenses: $" + methods.numberWithCommas(ctx.wizard.state.data.expense)  + "\n20% Retirement Planning: $" + methods.numberWithCommas(ctx.wizard.state.data.retirement) + "\n10% Insurance: $" + methods.numberWithCommas(ctx.wizard.state.data.insurance) + "\n\nYour goal is to keep your monthly expenses below $" + methods.numberWithCommas(ctx.wizard.state.data.expense) + ". I will be there with you every step of the way! Good luck! 👍🏻 \n\n<b>Would you like to amend the allocated budget for any of the categories above?</b>",
                 parse_mode: "HTML",
                 reply_markup: {
                     keyboard: [
@@ -151,9 +168,9 @@ step5.on("text", ctx => {
     }) 
 })
 
-const step6 = new Composer() 
+const step7 = new Composer() 
 
-step6.on("text", ctx => {
+step7.on("text", ctx => {
     const amendCategory = ctx.update.message.text
     if (!methods.answers.includes(amendCategory)) {
         const currentStepIndex = ctx.wizard.cursor;
@@ -194,9 +211,9 @@ step6.on("text", ctx => {
     
 })
 
-const step7 = new Composer() 
+const step8 = new Composer() 
 
-step7.on("text", ctx => {
+step8.on("text", ctx => {
     const budgetAllocation = ctx.update.message.text
     ctx.wizard.state.data.budgetAllocation = budgetAllocation
     if (!methods.budgetAllocation.includes(budgetAllocation)) {
@@ -210,9 +227,9 @@ step7.on("text", ctx => {
     return ctx.wizard.next();
 })
 
-const step8 = new Composer()
+const step9 = new Composer()
 
-step8.on("text", ctx => {
+step9.on("text", ctx => {
     const budget = ctx.update.message.text
     if (isNaN(budget)) {
         const currentStepIndex = ctx.wizard.cursor;
@@ -254,9 +271,9 @@ step8.on("text", ctx => {
     return ctx.wizard.next();
 })
 
-const step9 = new Composer()
+const step10 = new Composer()
 
-step9.on("text", ctx => {
+step10.on("text", ctx => {
     const amendCategory = ctx.update.message.text
     if (!methods.answers.includes(amendCategory)) {
         const currentStepIndex = ctx.wizard.cursor;
@@ -318,7 +335,8 @@ const introScene = new WizardScene(
                          step6,
                          step7,
                          step8,
-                         step9
+                         step9,
+                         step10
 );
 
 module.exports = {introScene}

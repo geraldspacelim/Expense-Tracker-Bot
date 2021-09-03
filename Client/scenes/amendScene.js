@@ -11,6 +11,9 @@ const step1 = ctx => {
                     {text: "Name"}
                 ],
                 [
+                    {text: "Contact"}
+                ],
+                [
                     {text: "DOB"}
                 ],
                 [
@@ -41,9 +44,12 @@ step2.on("text", ctx => {
         case "Name":
             ctx.reply("What would you like to change your name to?")
             return ctx.wizard.selectStep(2)
+        case "Contact":
+            ctx.reply("What is your new contact number?")
+            return ctx.wizard.selectStep(3)
         case "DOB":
             ctx.reply("What would you like to change your DOB to? (DD-MM-YYYY)")
-            return ctx.wizard.selectStep(3)       
+            return ctx.wizard.selectStep(4)       
         case "Occupation": 
             ctx.reply("What category would you like to change to?", {
                 reply_markup: {
@@ -67,10 +73,10 @@ step2.on("text", ctx => {
                     one_time_keyboard: true,
                 }
             })
-            return ctx.wizard.selectStep(4)       
+            return ctx.wizard.selectStep(5)       
         case "Monthly Income or Allowance":
             ctx.reply("What is your updated monthly income or allowance?")
-            return ctx.wizard.selectStep(5)  
+            return ctx.wizard.selectStep(6)  
     }
 })
 
@@ -92,6 +98,28 @@ step3.on("text", async ctx => {
 const step4 = new Composer();
 
 step4.on("text", async ctx => {
+    var contactRegex = new RegExp(/^\d{8}$/);
+    if (!contactRegex.test(ctx.message.text)) {
+        const currentStepIndex = ctx.wizard.cursor;
+        ctx.reply(
+          "Please enter a valid contact number."
+        );
+        return ctx.wizard.selectStep(currentStepIndex);
+    }
+    const data = {
+        category: 'Contact',
+        value: ctx.message.text
+    }
+    const rst  = await updateParticulars(data, ctx.from.id)
+    if (rst == 200) {
+        ctx.reply("Your particulars has been updated")
+        return ctx.scene.leave()
+    }
+})
+
+const step5 = new Composer();
+
+step5.on("text", async ctx => {
     var dtRegex = new RegExp(/^\d\d?-\w\w\-\d\d\d\d/);
     if (!dtRegex.test(ctx.message.text)) {
         const currentStepIndex = ctx.wizard.cursor;
@@ -112,9 +140,9 @@ step4.on("text", async ctx => {
     return ctx.scene.leave()
 })
 
-const step5 = new Composer();
+const step6 = new Composer();
 
-step5.on("text", async ctx => {
+step6.on("text", async ctx => {
     const occupation = ctx.message.text
     if (!methods.occupation.includes(occupation)) {
         const currentStepIndex = ctx.wizard.cursor;
@@ -135,9 +163,9 @@ step5.on("text", async ctx => {
     return ctx.scene.leave()
 })
 
-const step6 = new Composer();
+const step7 = new Composer();
 
-step6.on("text", async ctx => {
+step7.on("text", async ctx => {
     if (isNaN(ctx.message.text)) {
         const currentStepIndex = ctx.wizard.cursor;
         ctx.reply(

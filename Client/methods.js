@@ -6,7 +6,7 @@ const category = ["Work Food", "Good Food", "Coffee", "Alcohol", "Necessities", 
 const occupation = ["Polytechnic", "University", "Fresh Graduate", "Employed", "Unemployed"]
 const budgetAllocation = ["Cash Savings & Loans", "Expenses", "Retirement Planning", "Insurance"]
 const answers = ["Yes", "No"]
-const particulars = ["Name", "DOB", "Occupation", "Monthly Income or Allowance"]
+const particulars = ["Name", "Contact", "DOB", "Occupation", "Monthly Income or Allowance"]
 const calendar = {
               1 : "January",
               2 : "Feburary",
